@@ -121,7 +121,7 @@ def snap_to_gridlines(surrogate,
                               surrogate.params_nominal["log_msqrtR"]),dtype='d')
     trained_vals = surrogate.X*param_scaling[np.newaxis,:]
     trained_mu = np.unique(trained_vals[:,0])
-    trained_log_msqrtR = np.unique(trained_vals[:,3])
+    trained_log_msqrtR = np.unique(trained_vals[:,1])
     
     nearest = lambda trained,val : trained[np.argmin(np.abs(trained-val))]
     
