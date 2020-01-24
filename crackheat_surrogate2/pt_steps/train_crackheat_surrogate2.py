@@ -11,7 +11,7 @@ import numpy as np
 from limatix.dc_value import hrefvalue as hrefv
 from limatix.dc_value import numericunitsvalue as numericunitsv
 
-from crackheat_surrogate import get_rscripts_path
+from crackheat_surrogate2 import get_rscripts_path
 
 def run(_xmldoc,_element,
         _dest_href,

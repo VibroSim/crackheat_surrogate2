@@ -203,7 +203,7 @@ def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,
     paramlist = []
     
     #print("countdict keys=%s" % (str(list(countdict.keys()))))
-    while testgridpos < bendingstress.shape[0]:
+    while testgridpos < log_msqrtR.shape[0]:
         key = (log_msqrtR[testgridpos],)
         count = countdict[key]
 
