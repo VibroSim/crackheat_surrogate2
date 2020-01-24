@@ -202,7 +202,7 @@ write(serializeJSON(all_surrogates,digits=NA),file=output_filename)
 
 
 # Verify that R and Python reconstruction code give same result
-py_surrogates = crackheat_surrogate$load_surrogate$load_denorm_surrogates_from_jsonfile(output_filename,nonneg=FALSE)
+py_surrogates = crackheat_surrogate2$load_surrogate$load_denorm_surrogates_from_jsonfile(output_filename,nonneg=FALSE)
 
 test_mu = 0.3
 test_log_msqrtR = log(5e6)
