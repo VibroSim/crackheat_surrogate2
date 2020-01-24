@@ -196,7 +196,7 @@ def run(_xmldoc,_element,
     # rough equivalent of R expand.grid():
     biggrid_expanded = np.meshgrid(
         np.linspace(min_vals[0],max_vals[0],11), # mu
-        np.linspace(min_vals[3],max_vals[3],14)) # log_msqrtR
+        np.linspace(min_vals[1],max_vals[1],14)) # log_msqrtR
 
     biggrid = np.stack(biggrid_expanded,-1).reshape(-1,2)
     
