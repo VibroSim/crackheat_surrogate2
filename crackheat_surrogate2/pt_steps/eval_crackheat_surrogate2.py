@@ -6,7 +6,9 @@ import ast
 import copy
 import posixpath
 import subprocess
+import threading
 import multiprocessing
+import multiprocessing.dummy # Gives thread pools not process pools
 import itertools
 import numpy as np
 import pandas as pd
@@ -27,7 +29,9 @@ surrogate_eval_nsmap={
 }
 
 
-eval_crackheat_pool = multiprocessing.Pool()
+eval_crackheat_pool = multiprocessing.Pool(int(round(np.sqrt(multiprocessing.cpu_count()*1.5))))
+eval_crackheat_threadpool = multiprocessing.dummy.Pool(int(round(np.sqrt(multiprocessing.cpu_count()*1.5))))
+eval_crackheat_threadlock = threading.Lock()  # MUST be used when calling multiprocessing functions, matplotlib functions, and lxml functions from thread
 
 
 def plot_slices(_dest_href,
@@ -65,13 +69,18 @@ def plot_slices(_dest_href,
         testgrid = np.ones((testgrid_var_vals.shape[0],1),dtype='d')*testgrid_const_vals[np.newaxis,:]
         testgrid[:,axis] = testgrid_var_vals
             
+        eval_crackheat_threadlock.acquire() # pandas is documented as thread-unsafe.... this is probably unnecessary...
+        try:
+            testgrid_dataframe=pd.DataFrame(testgrid,columns=["mu","log_msqrtR"])
+            sur_out = surrogate.evaluate(testgrid_dataframe)
         
-        testgrid_dataframe=pd.DataFrame(testgrid,columns=["mu","log_msqrtR"])
-        sur_out = surrogate.evaluate(testgrid_dataframe)
-        
-        
-        testgrid_dict = { "mu": testgrid[:,0],
-                          "log_msqrtR": testgrid[:,1] }
+            
+            testgrid_dict = { "mu": testgrid[:,0],
+                              "log_msqrtR": testgrid[:,1] }
+            pass
+        finally:
+            eval_crackheat_threadlock.release() # pandas is documented as thread-unsafe.... this is probably unnecessary...
+            pass
         (direct,direct_stddev) = training_eval(testgrid_dict,surrogate.bendingstress,surrogate.dynamicnormalstressampl,surrogate.dynamicshearstressampl,tortuosity,
                                                dc_closurestress_side1_href.getpath(), # closure stress left side csv
                                                dc_closurestress_side2_href.getpath(), # closure stress right side csv
@@ -83,31 +92,42 @@ def plot_slices(_dest_href,
                                                crack_model_shear_type_str,
                                                E,nu,
                                                numdraws_int,
-                                               multiprocessing_pool=eval_crackheat_pool)
+                                               multiprocessing_pool=eval_crackheat_pool,
+                                               multiprocessing_lock=eval_crackheat_threadlock)
         
-        pl.figure()
-        pl.plot(testgrid_var_vals/axisunitfactor[axis],sur_out["mean"],'-',
-                testgrid_var_vals/axisunitfactor[axis],direct,'-',
-                testgrid_var_vals/axisunitfactor[axis],sur_out['lower95'],'--',
-                testgrid_var_vals/axisunitfactor[axis],direct+direct_stddev,':',
-                testgrid_var_vals/axisunitfactor[axis],sur_out['upper95'],'--',
-                testgrid_var_vals/axisunitfactor[axis],direct-direct_stddev,':')
-        pl.grid()
-        pl.xlabel('%s (%s)' % (axisnames[axis],axisunits[axis]))
-        pl.legend(('Surrogate','Direct','Surrogate bounds','Direct bounds'),loc='best')
-        title = ""
-        if axis != 0:
-            title += " mu = %f" % (mu_val)
-            pass
-        if axis != 1:
-            title += " ln msqrtR = %f ln(sqrt(m)/(m*m))" % (log_msqrtR_val)
-            pass
-        pl.title(title)
-        outputplot_href = hrefv("%s_surrogateeval_%.2d_%fMPa_%fMPa_%fMPa_%.2d.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=_dest_href)
+        eval_crackheat_threadlock.acquire() # matplotlib is thread-unsafe.... this is definitely necessary... surrogate_eval_doc is also thread-unsafe...
+        try:
+            pl.figure()
+            pl.plot(testgrid_var_vals/axisunitfactor[axis],sur_out["mean"],'-',
+                    testgrid_var_vals/axisunitfactor[axis],direct,'-',
+                    testgrid_var_vals/axisunitfactor[axis],sur_out['lower95'],'--',
+                    testgrid_var_vals/axisunitfactor[axis],direct+direct_stddev,':',
+                    testgrid_var_vals/axisunitfactor[axis],sur_out['upper95'],'--',
+                    testgrid_var_vals/axisunitfactor[axis],direct-direct_stddev,':',
+                    (testgrid_var_vals[0]/axisunitfactor[axis],testgrid_var_vals[-1]/axisunitfactor[axis]),surrogate.thermalpower/surrogate.excfreq,'-')
+            pl.grid()
+            pl.xlabel('%s (%s)' % (axisnames[axis],axisunits[axis]))
+            pl.ylabel('Heating per cycle (Joules)')
+            pl.legend(('Surrogate','Direct','Surrogate bounds','Direct bounds','Observation'),loc='best')
+            title = ""
+            if axis != 0:
+                title += " mu = %f" % (mu_val)
+                pass
+            if axis != 1:
+                title += " ln msqrtR = %f ln(sqrt(m)/(m*m))" % (log_msqrtR_val)
+                pass
+                
+            title += "\nbending=%.1f MPa normal=%.1f MPa shear=%.1f MPa" % (surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressamp/1e6)
+            pl.title(title)
+            outputplot_href = hrefv("%s_surrogateeval_%.2d_%.1fMPa_%.1fMPa_%.1fMPa_%.2d.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=_dest_href)
         
-        pl.savefig(outputplot_href.getpath(),dpi=300)
-        plot_el = surrogate_eval_doc.addelement(surrogate_eval_doc.getroot(),"dc:surrogateplot")
-        outputplot_href.xmlrepr(surrogate_eval_doc,plot_el)
+            pl.savefig(outputplot_href.getpath(),dpi=300)
+            plot_el = surrogate_eval_doc.addelement(surrogate_eval_doc.getroot(),"dc:surrogateplot")
+            outputplot_href.xmlrepr(surrogate_eval_doc,plot_el)
+            pass
+        finally:
+            eval_crackheat_threadlock.release() # pandas is documented as thread-unsafe.... this is probably unnecessary...
+            pass
         pass
     pass
 
@@ -131,7 +151,136 @@ def snap_to_gridlines(surrogate,
     
     return (mu_val,
             log_msqrtR_val)
-   
+
+
+def eval_crackheat_singlesurrogate(params):
+
+    (fixedparams,surrogate_key) = params
+    (surrogates,
+     surrogate_eval_doc,
+     biggrid_expanded,
+     biggrid_dataframe,
+     only_on_gridlines_bool,
+     _dest_href,
+     dc_specimen_str,
+     dc_closurestress_side1_href,
+     dc_closurestress_side2_href,
+     dc_a_side1_numericunits,
+     dc_a_side2_numericunits,
+     numdraws_int,
+     crack_model_normal_type_str,
+     crack_model_shear_type_str,
+     sigma_yield,
+     tau_yield,
+     E,nu,
+     tortuosity,
+     axisnames,
+     axisunits,
+     axisunitfactor,
+     min_vals,
+     max_vals) = fixedparams
+    
+    bigsur_out = surrogates[surrogate_key].evaluate(biggrid_dataframe)
+    
+    # find peaks in sd
+    sd_expanded = bigsur_out["sd"].reshape(biggrid_expanded[0].shape)
+    
+    sd_peaks = ( (sd_expanded[1:-1,1:-1] > sd_expanded[0:-2,1:-1]) &
+                 (sd_expanded[1:-1,1:-1] > sd_expanded[2:,1:-1]) &
+                 (sd_expanded[1:-1,1:-1] > sd_expanded[1:-1,0:-2]) &
+                 (sd_expanded[1:-1,1:-1] > sd_expanded[1:-1,2:]))
+    
+    #sd_peaklocs = np.where(sd_peaks)
+    
+    sd_peakvals = sd_expanded[1:-1,1:-1][sd_peaks]
+    sd_peak_mu = biggrid_expanded[0][1:-1,1:-1][sd_peaks]
+    sd_peak_log_msqrtR = biggrid_expanded[1][1:-1,1:-1][sd_peaks]
+    
+    sd_peaksort = np.argsort(sd_peakvals)
+    
+    peakidx=-1
+    for peakidx in range(min(2,sd_peakvals.shape[0])): # Use up to 2 peaks corresponding to relative maxima
+        mu_val = sd_peak_mu[sd_peaksort][-peakidx-1]
+        log_msqrtR_val = sd_peak_log_msqrtR[sd_peaksort][-peakidx-1]
+        
+        #raise ValueError("debug!")
+        if only_on_gridlines_bool:
+            (mu_val,
+             log_msqrtR_val) = snap_to_gridlines(surrogates[surrogate_key],
+                                                 mu_val,
+                                                 log_msqrtR_val)
+                
+            pass
+            
+        plot_slices(_dest_href,
+                    dc_specimen_str,
+                    dc_closurestress_side1_href,
+                    dc_closurestress_side2_href,
+                    dc_a_side1_numericunits,
+                    dc_a_side2_numericunits,
+                    numdraws_int,
+                    crack_model_normal_type_str,
+                    crack_model_shear_type_str,
+                    sigma_yield,
+                    tau_yield,
+                    E,nu,
+                    tortuosity,
+                    surrogate_eval_doc,
+                    surrogates[surrogate_key],
+                    axisnames,
+                    axisunits,
+                    axisunitfactor,
+                    min_vals,
+                    max_vals,
+                    peakidx,
+                    mu_val,log_msqrtR_val)
+        pass
+        
+    peakidx += 1
+    
+    if peakidx < 2:
+        # Did not display 2 peaks corresponding to relative maxima... Use peak corresponding to absolute maximum as well
+        idx_absmax = np.argmax(sd_expanded)
+        idxs_absmax = np.unravel_index(idx_absmax,sd_expanded.shape)
+        
+        mu_val = biggrid_expanded[0][idxs_absmax]
+        log_msqrtR_val = biggrid_expanded[1][idxs_absmax]
+        
+
+        if only_on_gridlines_bool:
+            (mu_val,
+             log_msqrtR_val) = snap_to_gridlines(surrogates[surrogate_key],
+                                                 mu_val,
+                                                 log_msqrtR_val)
+            pass
+            
+        plot_slices(_dest_href,
+                    dc_specimen_str,
+                    dc_closurestress_side1_href,
+                    dc_closurestress_side2_href,
+                    dc_a_side1_numericunits,
+                    dc_a_side2_numericunits,
+                    numdraws_int,
+                    crack_model_normal_type_str,
+                    crack_model_shear_type_str,
+                    sigma_yield,
+                    tau_yield,
+                    E,nu,
+                    tortuosity,
+                    surrogate_eval_doc,
+                    surrogates[surrogate_key],
+                    axisnames,
+                    axisunits,
+                    axisunitfactor,
+                    min_vals,
+                    max_vals,
+                    peakidx,
+                    mu_val,log_msqrtR_val)
+        
+        pass
+        
+    pass
+        
 
 def run(_xmldoc,_element,
         _dest_href,
@@ -185,8 +334,8 @@ def run(_xmldoc,_element,
 
     # rough equivalent of R expand.grid():
     biggrid_expanded = np.meshgrid(
-        np.linspace(min_vals[0],max_vals[0],11), # mu
-        np.linspace(min_vals[1],max_vals[1],14)) # log_msqrtR
+        np.linspace(min_vals[0],max_vals[0],7), # mu
+        np.linspace(min_vals[1],max_vals[1],8)) # log_msqrtR
 
     biggrid = np.stack(biggrid_expanded,-1).reshape(-1,2)
     
@@ -194,107 +343,42 @@ def run(_xmldoc,_element,
 
     #raise ValueError("debug")
 
+    fixedparams=(surrogates,
+                 surrogate_eval_doc,
+                 biggrid_expanded,
+                 biggrid_dataframe,
+                 only_on_gridlines_bool,
+                 _dest_href,
+                 dc_specimen_str,
+                 dc_closurestress_side1_href,
+                 dc_closurestress_side2_href,
+                 dc_a_side1_numericunits,
+                 dc_a_side2_numericunits,
+                 numdraws_int,
+                 crack_model_normal_type_str,
+                 crack_model_shear_type_str,
+                 sigma_yield,
+                 tau_yield,
+                 E,nu,
+                 tortuosity,
+                 axisnames,
+                 axisunits,
+                 axisunitfactor,
+                 min_vals,
+                 max_vals)
+    
+    paramlist = []
 
     for surrogate_key in surrogates:
-        bigsur_out = surrogates[surrogate_key].evaluate(biggrid_dataframe)
+        params = (fixedparams,surrogate_key)
+        paramlist.append(params)
+        pass
 
-        # find peaks in sd
-        sd_expanded = bigsur_out["sd"].reshape(biggrid_expanded[0].shape)
-        
-        sd_peaks = ( (sd_expanded[1:-1,1:-1] > sd_expanded[0:-2,1:-1]) &
-                     (sd_expanded[1:-1,1:-1] > sd_expanded[2:,1:-1]) &
-                     (sd_expanded[1:-1,1:-1] > sd_expanded[1:-1,0:-2]) &
-                     (sd_expanded[1:-1,1:-1] > sd_expanded[1:-1,2:]))
-        
-        #sd_peaklocs = np.where(sd_peaks)
-        
-        sd_peakvals = sd_expanded[1:-1,1:-1][sd_peaks]
-        sd_peak_mu = biggrid_expanded[0][1:-1,1:-1][sd_peaks]
-        sd_peak_log_msqrtR = biggrid_expanded[1][1:-1,1:-1][sd_peaks]
-
-        sd_peaksort = np.argsort(sd_peakvals)
-
-        peakidx=-1
-        for peakidx in range(min(2,sd_peakvals.shape[0])): # Use up to 2 peaks corresponding to relative maxima
-            mu_val = sd_peak_mu[sd_peaksort][-peakidx-1]
-            log_msqrtR_val = sd_peak_log_msqrtR[sd_peaksort][-peakidx-1]
-            
-            #raise ValueError("debug!")
-            if only_on_gridlines_bool:
-                (mu_val,
-                 log_msqrtR_val) = snap_to_gridlines(surrogates[surrogate_key],
-                                                     mu_val,
-                                                     log_msqrtR_val)
-                
-                pass
-
-            plot_slices(_dest_href,
-                        dc_specimen_str,
-                        dc_closurestress_side1_href,
-                        dc_closurestress_side2_href,
-                        dc_a_side1_numericunits,
-                        dc_a_side2_numericunits,
-                        numdraws_int,
-                        crack_model_normal_type_str,
-                        crack_model_shear_type_str,
-                        sigma_yield,
-                        tau_yield,
-                        E,nu,
-                        tortuosity,
-                        surrogate_eval_doc,
-                        surrogates[surrogate_key],
-                        axisnames,
-                        axisunits,
-                        axisunitfactor,
-                        min_vals,
-                        max_vals,
-                        peakidx,
-                        mu_val,log_msqrtR_val)
-            pass
-        
-        peakidx += 1
-    
-        if peakidx < 2:
-            # Did not display 2 peaks corresponding to relative maxima... Use peak corresponding to absolute maximum as well
-            idx_absmax = np.argmax(sd_expanded)
-            idxs_absmax = np.unravel_index(idx_absmax,sd_expanded.shape)
-
-            mu_val = biggrid_expanded[0][idxs_absmax]
-            log_msqrtR_val = biggrid_expanded[1][idxs_absmax]
-
-
-            if only_on_gridlines_bool:
-                (mu_val,
-                 log_msqrtR_val) = snap_to_gridlines(surrogates[surrogate_key],
-                                                     mu_val,
-                                                     log_msqrtR_val)
-                pass
-
-            plot_slices(_dest_href,
-                        dc_specimen_str,
-                        dc_closurestress_side1_href,
-                        dc_closurestress_side2_href,
-                        dc_a_side1_numericunits,
-                        dc_a_side2_numericunits,
-                        numdraws_int,
-                        crack_model_normal_type_str,
-                        crack_model_shear_type_str,
-                        sigma_yield,
-                        tau_yield,
-                        E,nu,
-                        tortuosity,
-                        surrogate_eval_doc,
-                        surrogates[surrogate_key],
-                        axisnames,
-                        axisunits,
-                        axisunitfactor,
-                        min_vals,
-                        max_vals,
-                        peakidx,
-                        mu_val,log_msqrtR_val)
-        
-            pass
-        
+    if eval_crackheat_threadpool is None:
+        resultlist = map(eval_crackheat_singlesurrogate,paramlist)
+        pass
+    else:
+        resultlist = eval_crackheat_threadpool.map(eval_crackheat_singlesurrogate,paramlist) # updates surrogate_eval_doc using proper locking
         pass
     
     return {
