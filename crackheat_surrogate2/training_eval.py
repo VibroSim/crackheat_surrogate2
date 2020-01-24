@@ -194,7 +194,7 @@ def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,
     # build dictionary of counts
     countdict = {}
     for uniqueidx in range(uniquevals.shape[1]):
-        key=(uniquevals[0,uniqueidx],uniquevals[1,uniqueidx],uniquevals[2,uniqueidx])
+        key=(uniquevals[0,uniqueidx],)
         countdict[key] = uniquecounts[uniqueidx]
         pass
     
