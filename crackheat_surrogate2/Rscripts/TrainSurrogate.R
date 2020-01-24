@@ -108,6 +108,9 @@ DynamicNormalStressAmpl = crackheat_table["DynamicNormalStressAmpl..Pa."]
 DynamicShearStressAmpl = crackheat_table["DynamicShearStressAmpl..Pa."]
 BendingStress = crackheat_table["BendingStress..Pa."]
 
+# ThermalPower extracted only for manual comparison purposes in eval_crackheat_surrogate; not otherwise used
+ThermalPower = crackheat_table["ThermalPower..W."]
+ExcFreq = crackheat_table["ExcFreq..Hz."]
 
 log_msqrtR_norm = log_msqrtR/log_msqrtR_nominal
 mu_norm = mu/mu_nominal
@@ -151,7 +154,11 @@ for (rownum in 1:NROW(lookup_keys)) {
     modeldata$bendingstress = as.numeric(BendingStress[rownum,])
     modeldata$dynamicnormalstressampl = as.numeric(DynamicNormalStressAmpl[rownum,])
     modeldata$dynamicshearstressampl = as.numeric(DynamicShearStressAmpl[rownum,])
-   
+
+    modeldata$thermalpower = as.numeric(ThermalPower[rownum,])
+    modeldata$excfreq = as.numeric(ExcFreq[rownum,])
+    
+    #print(paste('rownum=',rownum))   
 
     training_eval_output = crackheat_surrogate2$training_eval$training_eval(testgrid,modeldata$bendingstress,modeldata$dynamicnormalstressampl,modeldata$dynamicshearstressampl,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,py$multiprocessing_pool)
     heating_response = training_eval_output[[1]]
