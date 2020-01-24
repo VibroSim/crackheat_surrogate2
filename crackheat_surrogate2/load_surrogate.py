@@ -501,6 +501,9 @@ class denormalized_surrogate(surrogate_model):
     output_nominal = None
     
 
+    bendingstress = None
+    dynamicnormalstressampl = None
+    dynamicshearstressampl = None
 
     def evaluate(self,new_positions,meanonly=False,accel_trisolve_devs=None):
 
