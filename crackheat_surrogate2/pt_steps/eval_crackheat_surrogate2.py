@@ -211,22 +211,16 @@ def run(_xmldoc,_element,
         # find peaks in sd
         sd_expanded = bigsur_out["sd"].reshape(biggrid_expanded[0].shape)
         
-        sd_peaks = ( (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[0:-2,1:-1,1:-1,1:-1]) &
-                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[2:,1:-1,1:-1,1:-1]) &
-                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,0:-2,1:-1,1:-1]) &
-                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,2:,1:-1,1:-1]) &
-                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,1:-1,0:-2,1:-1]) &
-                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,1:-1,2:,1:-1]) &
-                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,1:-1,1:-1,0:-2]) &
-                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,1:-1,1:-1,2:]))
+        sd_peaks = ( (sd_expanded[1:-1,1:-1] > sd_expanded[0:-2,1:-1]) &
+                     (sd_expanded[1:-1,1:-1] > sd_expanded[2:,1:-1]) &
+                     (sd_expanded[1:-1,1:-1] > sd_expanded[1:-1,0:-2]) &
+                     (sd_expanded[1:-1,1:-1] > sd_expanded[1:-1,2:]))
         
         #sd_peaklocs = np.where(sd_peaks)
         
-        sd_peakvals = sd_expanded[1:-1,1:-1,1:-1,1:-1][sd_peaks]
-        sd_peak_mu = biggrid_expanded[0][1:-1,1:-1,1:-1,1:-1][sd_peaks]
-        sd_peak_bendingstress = biggrid_expanded[1][1:-1,1:-1,1:-1,1:-1][sd_peaks]
-        sd_peak_dynamicstress = biggrid_expanded[2][1:-1,1:-1,1:-1,1:-1][sd_peaks]
-        sd_peak_log_msqrtR = biggrid_expanded[3][1:-1,1:-1,1:-1,1:-1][sd_peaks]
+        sd_peakvals = sd_expanded[1:-1,1:-1][sd_peaks]
+        sd_peak_mu = biggrid_expanded[0][1:-1,1:-1][sd_peaks]
+        sd_peak_log_msqrtR = biggrid_expanded[1][1:-1,1:-1][sd_peaks]
 
         sd_peaksort = np.argsort(sd_peakvals)
 
@@ -276,17 +270,13 @@ def run(_xmldoc,_element,
             idxs_absmax = np.unravel_index(idx_absmax,sd_expanded.shape)
 
             mu_val = biggrid_expanded[0][idxs_absmax]
-            log_msqrtR_val = biggrid_expanded[3][idxs_absmax]
+            log_msqrtR_val = biggrid_expanded[1][idxs_absmax]
 
 
             if only_on_gridlines_bool:
                 (mu_val,
-                 bendingstress_val,
-                 dynamicstress_val,
                  log_msqrtR_val) = snap_to_gridlines(surrogate,
                                                      mu_val,
-                                                     bendingstress_val,
-                                                     dynamicstress_val,
                                                      log_msqrtR_val)
                 pass
 
