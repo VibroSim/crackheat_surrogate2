@@ -29,8 +29,8 @@ surrogate_eval_nsmap={
 }
 
 
-eval_crackheat_pool = multiprocessing.Pool(int(round(np.sqrt(multiprocessing.cpu_count()*1.5))))
-eval_crackheat_threadpool = multiprocessing.dummy.Pool(int(round(np.sqrt(multiprocessing.cpu_count()*1.5))))
+eval_crackheat_pool = multiprocessing.Pool()
+eval_crackheat_threadpool = multiprocessing.dummy.Pool()
 eval_crackheat_threadlock = threading.Lock()  # MUST be used when calling multiprocessing functions, matplotlib functions, and lxml functions from thread
 
 
