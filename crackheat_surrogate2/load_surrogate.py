@@ -466,6 +466,19 @@ fast path.
         
         covariance_param=np.array(covariance_range,dtype='d')
 
+
+        bendingstress_index = model_json["attributes"]["names"]["value"].index("bendingstress")
+        bendingstress = float(model_json["value"][bendingstress_index]["value"][0])
+
+        dynamicnormalstressampl_index = model_json["attributes"]["names"]["value"].index("dynamicnormalstressampl")
+        dynamicnormalstressampl = float(model_json["value"][dynamicnormalstressampl_index]["value"][0])
+        
+
+        dynamicshearstressampl_index = model_json["attributes"]["names"]["value"].index("dynamicshearstressampl")
+        dynamicshearstressampl = float(model_json["value"][dynamicshearstressampl_index]["value"][0])
+        
+
+        
         return cls(X=X,
                    y=y,
                    T=T,
@@ -478,6 +491,9 @@ fast path.
                    covariance_paramset_n=covariance_paramset_n,
                    covariance_sd2=covariance_sd2,
                    covariance_param=covariance_param,
+                   bendingstress=bendingstress,
+                   dynamicnormalstressampl=dynamicnormalstressampl,
+                   dynamicshearstressampl=dynamicshearstressampl,
                    **kwargs)
 
     @classmethod

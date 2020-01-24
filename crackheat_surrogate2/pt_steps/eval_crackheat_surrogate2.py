@@ -17,7 +17,7 @@ from limatix.dc_value import xmltreevalue as xmltreev
 from limatix.dc_value import numericunitsvalue as numericunitsv
 from limatix.xmldoc import xmldoc
 
-from crackheat_surrogate.load_surrogate import nonnegative_denormalized_surrogate
+from crackheat_surrogate.load_surrogate import load_denorm_surrogates_from_jsonfile
 from crackheat_surrogate.training_eval import training_eval
 
 surrogate_eval_nsmap={
@@ -51,13 +51,13 @@ def plot_slices(_dest_href,
                 min_vals,
                 max_vals,
                 peakidx,
-                mu_val,bendingstress_val,dynamicstress_val,log_msqrtR_val):
+                mu_val,log_msqrtR_val):
     
-    for axis in range(4):
-        # parameters are mu, bendingstress, dynamicstress, log_msqrtR
+    for axis in range(2):
+        # parameters are mu, log_msqrtR
         
         # Use these constant values except for the given axis
-        testgrid_const_vals = np.array((mu_val,bendingstress_val,dynamicstress_val,log_msqrtR_val),dtype='d')
+        testgrid_const_vals = np.array((mu_val,log_msqrtR_val),dtype='d')
             
         # Use these values for the given axis
         testgrid_var_vals = np.linspace(min_vals[axis],max_vals[axis],50)
@@ -66,15 +66,13 @@ def plot_slices(_dest_href,
         testgrid[:,axis] = testgrid_var_vals
             
         
-        testgrid_dataframe=pd.DataFrame(testgrid,columns=["mu","bendingstress","dynamicstress","log_msqrtR"])
+        testgrid_dataframe=pd.DataFrame(testgrid,columns=["mu","log_msqrtR"])
         sur_out = surrogate.evaluate(testgrid_dataframe)
-            
-            
+        
+        
         testgrid_dict = { "mu": testgrid[:,0],
-                          "bendingstress": testgrid[:,1],
-                          "dynamicstress": testgrid[:,2],
-                          "log_msqrtR": testgrid[:,3] }
-        (direct,direct_stddev) = training_eval(testgrid_dict,tortuosity,
+                          "log_msqrtR": testgrid[:,1] }
+        (direct,direct_stddev) = training_eval(testgrid_dict,surrogate.bendingstress,surrogate.dynamicnormalstressampl,surrogate.dynamicshearstressampl,tortuosity,
                                                dc_closurestress_side1_href.getpath(), # closure stress left side csv
                                                dc_closurestress_side2_href.getpath(), # closure stress right side csv
                                                dc_a_side1_numericunits.value('m'), # crack length left side
@@ -102,16 +100,10 @@ def plot_slices(_dest_href,
             title += " mu = %f" % (mu_val)
             pass
         if axis != 1:
-            title += " bendingstress = %f MPa" % (bendingstress_val/1e6)
-            pass
-        if axis != 2:
-            title += " dynamicstress = %f MPa" % (dynamicstress_val/1e6)
-            pass
-        if axis != 3:
             title += " ln msqrtR = %f ln(sqrt(m)/(m*m))" % (log_msqrtR_val)
             pass
         pl.title(title)
-        outputplot_href = hrefv("%s_surrogateeval_%.2d_%.2d.png" % (dc_specimen_str,peakidx,axis),contexthref=_dest_href)
+        outputplot_href = hrefv("%s_surrogateeval_%.2d_%fMPa_%fMPa_%fMPa_%.2d.png" % (dc_specimen_str,bendingstress/1e6,dynamicnormalstressampl/1e6,dynamicshearstressampl/1e6,peakidx,axis),contexthref=_dest_href)
         
         pl.savefig(outputplot_href.getpath(),dpi=300)
         plot_el = surrogate_eval_doc.addelement(surrogate_eval_doc.getroot(),"dc:surrogateplot")
@@ -184,12 +176,12 @@ def run(_xmldoc,_element,
     # xml sub-document to hold plot output hrefs
     surrogate_eval_doc = xmldoc.newdoc("dc:surrogate_eval",nsmap=surrogate_eval_nsmap,contexthref=_xmldoc.getcontexthref())
     
-    # Load in surrogate
-    surrogate = nonnegative_denormalized_surrogate.fromjsonfile(dc_surrogate_href.getpath())
+    # Load in surrogates
+    surrogates = load_denorm_surrogates_from_jsonfile(dc_surrogate_href.getpath(),nonneg=True)
 
-    axisnames = ['mu','bendingstress','dynamicstress','log msqrtR']
-    axisunits = ['unitless','MPa','MPa','ln(sqrt(m)/(m*m))']
-    axisunitfactor = [ 1.0, 1e6, 1e6, 1.0 ]
+    axisnames = ['mu','log msqrtR']
+    axisunits = ['unitless','ln(sqrt(m)/(m*m))']
+    axisunitfactor = [ 1.0, 1.0 ]
     
     # biggrid .. we go through biggrid in the Surrogate finding
     # the worst case standard deviations. Then we use these as the
@@ -198,140 +190,133 @@ def run(_xmldoc,_element,
 
     # !!!*** NOTE: the bounds of the seq's in TrainSurrogate.R
     # should match min_vals and max_vals!!!***
-    min_vals = np.array((0.02,0.0,0.5e6,9.2),dtype='d')
-    max_vals = np.array((2.0,250e6,75e6,18.4),dtype='d')
+    min_vals = np.array((0.02,9.2),dtype='d')
+    max_vals = np.array((2.0,18.4),dtype='d')
 
     # rough equivalent of R expand.grid():
     biggrid_expanded = np.meshgrid(
         np.linspace(min_vals[0],max_vals[0],11), # mu
-        np.linspace(min_vals[1],max_vals[1],12), # bendingstress
-        np.linspace(min_vals[2],max_vals[2],13), # dynamicstress
         np.linspace(min_vals[3],max_vals[3],14)) # log_msqrtR
 
-    biggrid = np.stack(biggrid_expanded,-1).reshape(-1,4)
+    biggrid = np.stack(biggrid_expanded,-1).reshape(-1,2)
     
-    biggrid_dataframe=pd.DataFrame(biggrid,columns=["mu","bendingstress","dynamicstress","log_msqrtR"])
+    biggrid_dataframe=pd.DataFrame(biggrid,columns=["mu","log_msqrtR"])
 
     #raise ValueError("debug")
-    
-    bigsur_out = surrogate.evaluate(biggrid_dataframe)
 
-    # find peaks in sd
-    sd_expanded = bigsur_out["sd"].reshape(biggrid_expanded[0].shape)
 
-    sd_peaks = ( (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[0:-2,1:-1,1:-1,1:-1]) &
-                 (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[2:,1:-1,1:-1,1:-1]) &
-                 (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,0:-2,1:-1,1:-1]) &
-                 (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,2:,1:-1,1:-1]) &
-                 (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,1:-1,0:-2,1:-1]) &
-                 (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,1:-1,2:,1:-1]) &
-                 (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,1:-1,1:-1,0:-2]) &
-                 (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,1:-1,1:-1,2:]))
+    for surrogate_key in surrogates:
+        bigsur_out = surrogates[surrogate_key].evaluate(biggrid_dataframe)
 
-    #sd_peaklocs = np.where(sd_peaks)
-    
-    sd_peakvals = sd_expanded[1:-1,1:-1,1:-1,1:-1][sd_peaks]
-    sd_peak_mu = biggrid_expanded[0][1:-1,1:-1,1:-1,1:-1][sd_peaks]
-    sd_peak_bendingstress = biggrid_expanded[1][1:-1,1:-1,1:-1,1:-1][sd_peaks]
-    sd_peak_dynamicstress = biggrid_expanded[2][1:-1,1:-1,1:-1,1:-1][sd_peaks]
-    sd_peak_log_msqrtR = biggrid_expanded[3][1:-1,1:-1,1:-1,1:-1][sd_peaks]
-
-    sd_peaksort = np.argsort(sd_peakvals)
-
-    peakidx=-1
-    for peakidx in range(min(2,sd_peakvals.shape[0])): # Use up to 2 peaks corresponding to relative maxima
-        mu_val = sd_peak_mu[sd_peaksort][-peakidx-1]
-        bendingstress_val = sd_peak_bendingstress[sd_peaksort][-peakidx-1]
-        dynamicstress_val = sd_peak_dynamicstress[sd_peaksort][-peakidx-1]
-        log_msqrtR_val = sd_peak_log_msqrtR[sd_peaksort][-peakidx-1]
+        # find peaks in sd
+        sd_expanded = bigsur_out["sd"].reshape(biggrid_expanded[0].shape)
         
-        #raise ValueError("debug!")
-        if only_on_gridlines_bool:
-            (mu_val,
-             bendingstress_val,
-             dynamicstress_val,
-             log_msqrtR_val) = snap_to_gridlines(surrogate,
-                                                 mu_val,
-                                                 bendingstress_val,
-                                                 dynamicstress_val,
-                                                 log_msqrtR_val)
+        sd_peaks = ( (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[0:-2,1:-1,1:-1,1:-1]) &
+                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[2:,1:-1,1:-1,1:-1]) &
+                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,0:-2,1:-1,1:-1]) &
+                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,2:,1:-1,1:-1]) &
+                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,1:-1,0:-2,1:-1]) &
+                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,1:-1,2:,1:-1]) &
+                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,1:-1,1:-1,0:-2]) &
+                     (sd_expanded[1:-1,1:-1,1:-1,1:-1] > sd_expanded[1:-1,1:-1,1:-1,2:]))
+        
+        #sd_peaklocs = np.where(sd_peaks)
+        
+        sd_peakvals = sd_expanded[1:-1,1:-1,1:-1,1:-1][sd_peaks]
+        sd_peak_mu = biggrid_expanded[0][1:-1,1:-1,1:-1,1:-1][sd_peaks]
+        sd_peak_bendingstress = biggrid_expanded[1][1:-1,1:-1,1:-1,1:-1][sd_peaks]
+        sd_peak_dynamicstress = biggrid_expanded[2][1:-1,1:-1,1:-1,1:-1][sd_peaks]
+        sd_peak_log_msqrtR = biggrid_expanded[3][1:-1,1:-1,1:-1,1:-1][sd_peaks]
+
+        sd_peaksort = np.argsort(sd_peakvals)
+
+        peakidx=-1
+        for peakidx in range(min(2,sd_peakvals.shape[0])): # Use up to 2 peaks corresponding to relative maxima
+            mu_val = sd_peak_mu[sd_peaksort][-peakidx-1]
+            log_msqrtR_val = sd_peak_log_msqrtR[sd_peaksort][-peakidx-1]
             
+            #raise ValueError("debug!")
+            if only_on_gridlines_bool:
+                (mu_val,
+                 log_msqrtR_val) = snap_to_gridlines(surrogate,
+                                                     mu_val,
+                                                     log_msqrtR_val)
+                
+                pass
+
+            plot_slices(_dest_href,
+                        dc_specimen_str,
+                        dc_closurestress_side1_href,
+                        dc_closurestress_side2_href,
+                        dc_a_side1_numericunits,
+                        dc_a_side2_numericunits,
+                        numdraws_int,
+                        crack_model_normal_type_str,
+                        crack_model_shear_type_str,
+                        sigma_yield,
+                        tau_yield,
+                        E,nu,
+                        tortuosity,
+                        surrogate_eval_doc,
+                        surrogates[surrogate_key],
+                        axisnames,
+                        axisunits,
+                        axisunitfactor,
+                        min_vals,
+                        max_vals,
+                        peakidx,
+                        mu_val,log_msqrtR_val)
             pass
-
-        plot_slices(_dest_href,
-                    dc_specimen_str,
-                    dc_closurestress_side1_href,
-                    dc_closurestress_side2_href,
-                    dc_a_side1_numericunits,
-                    dc_a_side2_numericunits,
-                    numdraws_int,
-                    crack_model_normal_type_str,
-                    crack_model_shear_type_str,
-                    sigma_yield,
-                    tau_yield,
-                    E,nu,
-                    tortuosity,
-                    surrogate_eval_doc,
-                    surrogate,
-                    axisnames,
-                    axisunits,
-                    axisunitfactor,
-                    min_vals,
-                    max_vals,
-                    peakidx,
-                    mu_val,bendingstress_val,dynamicstress_val,log_msqrtR_val)
-        pass
+        
+        peakidx += 1
     
-    peakidx += 1
-    
-    if peakidx < 2:
-        # Did not display 2 peaks corresponding to relative maxima... Use peak corresponding to absolute maximum as well
-        idx_absmax = np.argmax(sd_expanded)
-        idxs_absmax = np.unravel_index(idx_absmax,sd_expanded.shape)
+        if peakidx < 2:
+            # Did not display 2 peaks corresponding to relative maxima... Use peak corresponding to absolute maximum as well
+            idx_absmax = np.argmax(sd_expanded)
+            idxs_absmax = np.unravel_index(idx_absmax,sd_expanded.shape)
 
-        mu_val = biggrid_expanded[0][idxs_absmax]
-        bendingstress_val = biggrid_expanded[1][idxs_absmax]
-        dynamicstress_val = biggrid_expanded[2][idxs_absmax]
-        log_msqrtR_val = biggrid_expanded[3][idxs_absmax]
+            mu_val = biggrid_expanded[0][idxs_absmax]
+            log_msqrtR_val = biggrid_expanded[3][idxs_absmax]
 
 
-        if only_on_gridlines_bool:
-            (mu_val,
-             bendingstress_val,
-             dynamicstress_val,
-             log_msqrtR_val) = snap_to_gridlines(surrogate,
-                                                 mu_val,
-                                                 bendingstress_val,
-                                                 dynamicstress_val,
-                                                 log_msqrtR_val)
+            if only_on_gridlines_bool:
+                (mu_val,
+                 bendingstress_val,
+                 dynamicstress_val,
+                 log_msqrtR_val) = snap_to_gridlines(surrogate,
+                                                     mu_val,
+                                                     bendingstress_val,
+                                                     dynamicstress_val,
+                                                     log_msqrtR_val)
+                pass
+
+            plot_slices(_dest_href,
+                        dc_specimen_str,
+                        dc_closurestress_side1_href,
+                        dc_closurestress_side2_href,
+                        dc_a_side1_numericunits,
+                        dc_a_side2_numericunits,
+                        numdraws_int,
+                        crack_model_normal_type_str,
+                        crack_model_shear_type_str,
+                        sigma_yield,
+                        tau_yield,
+                        E,nu,
+                        tortuosity,
+                        surrogate_eval_doc,
+                        surrogates[surrogate_key],
+                        axisnames,
+                        axisunits,
+                        axisunitfactor,
+                        min_vals,
+                        max_vals,
+                        peakidx,
+                        mu_val,log_msqrtR_val)
+        
             pass
-
-        plot_slices(_dest_href,
-                    dc_specimen_str,
-                    dc_closurestress_side1_href,
-                    dc_closurestress_side2_href,
-                    dc_a_side1_numericunits,
-                    dc_a_side2_numericunits,
-                    numdraws_int,
-                    crack_model_normal_type_str,
-                    crack_model_shear_type_str,
-                    sigma_yield,
-                    tau_yield,
-                    E,nu,
-                    tortuosity,
-                    surrogate_eval_doc,
-                    surrogate,
-                    axisnames,
-                    axisunits,
-                    axisunitfactor,
-                    min_vals,
-                    max_vals,
-                    peakidx,
-                    mu_val,bendingstress_val,dynamicstress_val,log_msqrtR_val)
         
         pass
-        
-
+    
     return {
         "dc:surrogate_eval": xmltreev(surrogate_eval_doc)
         }

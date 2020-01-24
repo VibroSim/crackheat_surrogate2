@@ -148,7 +148,12 @@ for (rownum in 1:nrows(lookup_keys)) {
     modeldata$params_nominal = c(mu_nominal,log_msqrtR_nominal)
     modeldata$output_nominal = heating_response_nominal
 
-    training_eval_output = crackheat_surrogate2$training_eval$training_eval(testgrid,as.numeric(BendingStress[[rownum]]),as.numeric(DynamicNormalStressAmpl[[rownum]]),as.numeric(DynamicShearStressAmpl[[rownum]]),tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,py$multiprocessing_pool)
+    modeldata$bendingstress = as.numeric(BendingStress[[rownum]])
+    modeldata$dynamicnormalstressampl = as.numeric(DynamicNormalStressAmpl[[rownum]])
+    modeldata$dynamicshearstressampl = as.numeric(DynamicShearStressAmpl[[rownum]])
+   
+
+    training_eval_output = crackheat_surrogate2$training_eval$training_eval(testgrid,modeldata$bendingstress,modeldata$dynamicnormalstressampl,modeldata$dynamicshearstressampl,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,py$multiprocessing_pool)
     heating_response = training_eval_output[[1]]
     noise.stddev = training_eval_output[[2]]
 
