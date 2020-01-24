@@ -595,7 +595,13 @@ class denormalized_surrogate(surrogate_model):
         
 
         thermalpower_index = surrogate_json["attributes"]["names"]["value"].index("thermalpower")
-        thermalpower = float(surrogate_json["value"][thermalpower_index]["value"][0])
+        thermalpower_str = surrogate_json["value"][thermalpower_index]["value"][0]
+        if thermalpower_str == "NA": # accommodate R NA values
+            thermalpower = np.nan
+            pass
+        else:
+            thermalpower = float(thermalpower_str)
+            pass
 
         excfreq_index = surrogate_json["attributes"]["names"]["value"].index("excfreq")
         excfreq = float(surrogate_json["value"][excfreq_index]["value"][0])

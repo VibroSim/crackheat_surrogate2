@@ -102,9 +102,9 @@ def plot_slices(_dest_href,
                     testgrid_var_vals/axisunitfactor[axis],direct,'-',
                     testgrid_var_vals/axisunitfactor[axis],sur_out['lower95'],'--',
                     testgrid_var_vals/axisunitfactor[axis],direct+direct_stddev,':',
+                    (testgrid_var_vals[0]/axisunitfactor[axis],testgrid_var_vals[-1]/axisunitfactor[axis]),(surrogate.thermalpower/surrogate.excfreq,surrogate.thermalpower/surrogate.excfreq),'-',
                     testgrid_var_vals/axisunitfactor[axis],sur_out['upper95'],'--',
-                    testgrid_var_vals/axisunitfactor[axis],direct-direct_stddev,':',
-                    (testgrid_var_vals[0]/axisunitfactor[axis],testgrid_var_vals[-1]/axisunitfactor[axis]),surrogate.thermalpower/surrogate.excfreq,'-')
+                    testgrid_var_vals/axisunitfactor[axis],direct-direct_stddev,':')
             pl.grid()
             pl.xlabel('%s (%s)' % (axisnames[axis],axisunits[axis]))
             pl.ylabel('Heating per cycle (Joules)')
@@ -117,7 +117,7 @@ def plot_slices(_dest_href,
                 title += " ln msqrtR = %f ln(sqrt(m)/(m*m))" % (log_msqrtR_val)
                 pass
                 
-            title += "\nbending=%.1f MPa normal=%.1f MPa shear=%.1f MPa" % (surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressamp/1e6)
+            title += "\nbending=%.1f MPa normal=%.1f MPa shear=%.1f MPa" % (surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6)
             pl.title(title)
             outputplot_href = hrefv("%s_surrogateeval_%.2d_%.1fMPa_%.1fMPa_%.1fMPa_%.2d.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=_dest_href)
         
