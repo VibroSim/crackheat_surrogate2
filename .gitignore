@@ -1,0 +1,7 @@
+*.pyc
+*.bak
+*~
+__pycache__
+build
+dist
+crackheat_surrogate.egg-info
