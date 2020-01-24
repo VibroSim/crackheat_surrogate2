@@ -467,16 +467,6 @@ fast path.
         covariance_param=np.array(covariance_range,dtype='d')
 
 
-        bendingstress_index = model_json["attributes"]["names"]["value"].index("bendingstress")
-        bendingstress = float(model_json["value"][bendingstress_index]["value"][0])
-
-        dynamicnormalstressampl_index = model_json["attributes"]["names"]["value"].index("dynamicnormalstressampl")
-        dynamicnormalstressampl = float(model_json["value"][dynamicnormalstressampl_index]["value"][0])
-        
-
-        dynamicshearstressampl_index = model_json["attributes"]["names"]["value"].index("dynamicshearstressampl")
-        dynamicshearstressampl = float(model_json["value"][dynamicshearstressampl_index]["value"][0])
-        
 
         
         return cls(X=X,
@@ -491,9 +481,6 @@ fast path.
                    covariance_paramset_n=covariance_paramset_n,
                    covariance_sd2=covariance_sd2,
                    covariance_param=covariance_param,
-                   bendingstress=bendingstress,
-                   dynamicnormalstressampl=dynamicnormalstressampl,
-                   dynamicshearstressampl=dynamicshearstressampl,
                    **kwargs)
 
     @classmethod
@@ -591,9 +578,26 @@ class denormalized_surrogate(surrogate_model):
             closure_lowest_avg_load_used=float(surrogate_json["value"][closure_lowest_avg_load_used_index]["value"][0])
             pass
 
+        bendingstress_index = surrogate_json["attributes"]["names"]["value"].index("bendingstress")
+        bendingstress = float(surrogate_json["value"][bendingstress_index]["value"][0])
+
+        dynamicnormalstressampl_index = surrogate_json["attributes"]["names"]["value"].index("dynamicnormalstressampl")
+        dynamicnormalstressampl = float(surrogate_json["value"][dynamicnormalstressampl_index]["value"][0])
+        
+
+        dynamicshearstressampl_index = surrogate_json["attributes"]["names"]["value"].index("dynamicshearstressampl")
+        dynamicshearstressampl = float(surrogate_json["value"][dynamicshearstressampl_index]["value"][0])
+        
+
+        
         return  super(denormalized_surrogate,cls).fromjson(model_json,
                                                            params_nominal = params_nominal,
-                                                           output_nominal = output_nominal,closure_lowest_avg_load_used=closure_lowest_avg_load_used,**kwargs)
+                                                           output_nominal = output_nominal,
+                                                           closure_lowest_avg_load_used=closure_lowest_avg_load_used,
+                                                           bendingstress=bendingstress,
+                                                           dynamicnormalstressampl=dynamicnormalstressampl,
+                                                           dynamicshearstressampl=dynamicshearstressampl,
+                                                           **kwargs)
     pass
 
 

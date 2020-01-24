@@ -5,7 +5,7 @@
 import numpy as np
 import pandas as pd
 
-from crackheat_surrogate import load_surrogate
+from crackheat_surrogate2 import load_surrogate
 
 
 json_surrogates_file="/tmp/C18-AFVT-019H_surrogate.json"
