@@ -115,31 +115,21 @@ def plot_slices(_dest_href,
 
 def snap_to_gridlines(surrogate,
                       mu_val,
-                      bendingstress_val,
-                      dynamicstress_val,
                       log_msqrtR_val):
 
     param_scaling = np.array((surrogate.params_nominal["mu"],
-                              surrogate.params_nominal["bendingstress"],
-                              surrogate.params_nominal["dynamicstress"],
                               surrogate.params_nominal["log_msqrtR"]),dtype='d')
     trained_vals = surrogate.X*param_scaling[np.newaxis,:]
     trained_mu = np.unique(trained_vals[:,0])
-    trained_bendingstress = np.unique(trained_vals[:,1])
-    trained_dynamicstress = np.unique(trained_vals[:,2])
     trained_log_msqrtR = np.unique(trained_vals[:,3])
     
     nearest = lambda trained,val : trained[np.argmin(np.abs(trained-val))]
     
     mu_val = nearest(trained_mu, mu_val)
-    bendingstress_val = nearest(trained_bendingstress, bendingstress_val)
-    dynamicstress_val = nearest(trained_dynamicstress, dynamicstress_val)
     log_msqrtR_val = nearest(trained_log_msqrtR,log_msqrtR_val)
     
     
     return (mu_val,
-            bendingstress_val,
-            dynamicstress_val,
             log_msqrtR_val)
    
 
