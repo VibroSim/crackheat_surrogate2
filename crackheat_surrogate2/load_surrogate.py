@@ -608,8 +608,8 @@ class denormalized_surrogate(surrogate_model):
                                                            bendingstress=bendingstress,
                                                            dynamicnormalstressampl=dynamicnormalstressampl,
                                                            dynamicshearstressampl=dynamicshearstressampl,
-                                                           thermalpower,
-                                                           excfreq,
+                                                           thermalpower=thermalpower,
+                                                           excfreq=excfreq,
                                                            **kwargs)
     pass
 
