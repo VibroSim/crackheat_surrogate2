@@ -153,10 +153,12 @@ def snap_to_gridlines(surrogate,
             log_msqrtR_val)
 
 
-def eval_crackheat_singlesurrogate(fixedparams,surrogate_key):
+def eval_crackheat_singlesurrogate(params):
 
+    (fixedparams,surrogate_key) = params
     (surrogates,
      surrogate_eval_doc,
+     biggrid_expanded,
      biggrid_dataframe,
      only_on_gridlines_bool,
      _dest_href,
@@ -343,6 +345,7 @@ def run(_xmldoc,_element,
 
     fixedparams=(surrogates,
                  surrogate_eval_doc,
+                 biggrid_expanded,
                  biggrid_dataframe,
                  only_on_gridlines_bool,
                  _dest_href,
