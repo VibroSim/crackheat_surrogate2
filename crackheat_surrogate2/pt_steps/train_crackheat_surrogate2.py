@@ -51,11 +51,10 @@ def run(_xmldoc,_element,
     E=dc_spcYoungsModulus_numericunits.value("Pa")
     nu = dc_spcPoissonsRatio_numericunits.value("unitless")   #Poisson's Ratio
 
-    for rownum in range(lookp_keys.shape[0]):
-        
-    
-    outputfile_href = hrefv("%s_surrogate.json" % (dc_specimen_str),contexthref=_dest_href)
+    outputfile_href = hrefv("%s_surrogates.json" % (dc_specimen_str),contexthref=_dest_href)
 
+    
+        
     TrainSurrogate_params = [ str(dc_filtered_sigma_numericunits.value("radians")*180.0/np.pi),
                               dc_closurestress_side1_href.getpath(),
                               dc_closurestress_side2_href.getpath(),
