@@ -178,8 +178,8 @@ def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,
     crack_initial_opening_right = crackopening_from_tensile_closure(x_right,x_bnd_right,closure_stress_right,dx_right,aright,sigma_yield,crack_model_normal)
 
 
-    totalpower = np.zeros(bendingstress.shape[0],dtype='d')
-    totalpower_stddev = np.zeros(bendingstress.shape[0],dtype='d')
+    totalpower = np.zeros(mu.shape[0],dtype='d')
+    totalpower_stddev = np.zeros(mu.shape[0],dtype='d')
     
     # Find unique values of bendingstress, dynamicstress, and msqrtRn
     #print("bendingstress=%s" % (str(bendingstress)))

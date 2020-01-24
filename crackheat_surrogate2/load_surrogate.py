@@ -658,7 +658,7 @@ def load_denorm_surrogates_from_jsonfile(surrogates_jsonfile,nonneg=True,**kwarg
 
     for attrindex in range(len(jsondata["attributes"]["names"]["value"])):
         attrname = jsondata["attributes"]["names"]["value"][attrindex]
-        if attrname.startswith("dnsa_pa"):  # This is a surrogate, named according to dynamic normal stress amplitude, dynamic shear stress amplitude, and bending stress
+        if attrname.startswith("bs_pa"):  # This is a surrogate, named according to dynamic normal stress amplitude, dynamic shear stress amplitude, and bending stress
             denorm_surrogates[attrname]=denormalized_surrogate_class.fromjson(jsondata["value"][attrindex],closure_lowest_avg_load_used_default = closure_lowest_avg_load_used, **kwargs)
             pass
         pass

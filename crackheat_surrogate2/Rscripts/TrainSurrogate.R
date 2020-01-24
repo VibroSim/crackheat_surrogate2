@@ -99,14 +99,14 @@ heating_response_nominal = 1e-6
 
 # identify (DynamicNormalStressAmpl, DynamicShearStressAmpl, BendingStress)
 # string tuples from crackheat csv, so we can train one surrogate for each. 
-crackheat_table = read.csv(crackheat_table_csv,colclasses=c("DynamicNormalStressAmpl (Pa)"="character",
-		 			  "DynamicShearStressAmpl (Pa)"="character",
-                                          "BendingStress (Pa)"="character"),
+crackheat_table = read.csv(crackheat_table_csv,colClasses=c("DynamicNormalStressAmpl..Pa."="character",
+		 			  "DynamicShearStressAmpl..Pa."="character",
+                                          "BendingStress..Pa."="character"),
 					  stringsAsFactors=FALSE)
-lookup_keys=paste("dnsa_pa",crackheat_table["DynamicNormalStressAmpl (Pa)"],"dssa_pa",crackheat_table["DynamicShearStressAmpl (Pa)"],"bs_pa",crackheat_table["BendingStress (Pa)"])
-DynamicNormalStressAmpl = crackheat_table["DynamicNormalStressAmpl (Pa)"]
-DynamicShearStressAmpl = crackheat_table["DynamicShearStressAmpl (Pa)"]
-BendingStress = crackheat_table["BendingStress (Pa)"]
+lookup_keys=paste("bs_pa",crackheat_table[["BendingStress..Pa."]],"dnsa_pa",crackheat_table[["DynamicNormalStressAmpl..Pa."]],"dssa_pa",crackheat_table[["DynamicShearStressAmpl..Pa."]],sep='_')
+DynamicNormalStressAmpl = crackheat_table["DynamicNormalStressAmpl..Pa."]
+DynamicShearStressAmpl = crackheat_table["DynamicShearStressAmpl..Pa."]
+BendingStress = crackheat_table["BendingStress..Pa."]
 
 
 log_msqrtR_norm = log_msqrtR/log_msqrtR_nominal
@@ -140,7 +140,7 @@ all_surrogates = list()
 
 all_surrogates$closure_lowest_avg_load_used = closure_lowest_avg_load_used
 
-for (rownum in 1:nrows(lookup_keys)) {
+for (rownum in 1:NROW(lookup_keys)) {
 
     # Data structure to store our model data
     modeldata = list()
@@ -148,9 +148,9 @@ for (rownum in 1:nrows(lookup_keys)) {
     modeldata$params_nominal = c(mu_nominal,log_msqrtR_nominal)
     modeldata$output_nominal = heating_response_nominal
 
-    modeldata$bendingstress = as.numeric(BendingStress[[rownum]])
-    modeldata$dynamicnormalstressampl = as.numeric(DynamicNormalStressAmpl[[rownum]])
-    modeldata$dynamicshearstressampl = as.numeric(DynamicShearStressAmpl[[rownum]])
+    modeldata$bendingstress = as.numeric(BendingStress[rownum,])
+    modeldata$dynamicnormalstressampl = as.numeric(DynamicNormalStressAmpl[rownum,])
+    modeldata$dynamicshearstressampl = as.numeric(DynamicShearStressAmpl[rownum,])
    
 
     training_eval_output = crackheat_surrogate2$training_eval$training_eval(testgrid,modeldata$bendingstress,modeldata$dynamicnormalstressampl,modeldata$dynamicshearstressampl,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,py$multiprocessing_pool)
