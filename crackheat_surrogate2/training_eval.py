@@ -16,6 +16,7 @@ from angled_friction_model.angled_friction_model import integrate_power
 
 def afm_calc(params):
     (fixedparams,
+     friction_coefficient_array,
      log_msqrtR_val) = params
     
     (bendingstress,dynamicnormalstress,dynamicshearstress,x_bnd_left,x_left,dx_left,x_bnd_right,x_right,dx_right,numdraws,E,nu,sigma_yield,tau_yield,closure_stress_left,crack_initial_opening_left,closure_stress_right,crack_initial_opening_right,tortuosity,aleft,aright,crack_model_normal_type,crack_model_shear_type,verbose,doplots) = fixedparams
