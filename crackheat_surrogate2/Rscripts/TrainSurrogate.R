@@ -213,7 +213,7 @@ test_log_msqrtR_norm = test_log_msqrtR/log_msqrtR_nominal
 #test_positions_py = t(matrix(c(test_mu,test_log_msqrtR))) # create single-row matrix
 test_positions_py = data.frame(mu = test_mu, log_msqrtR = test_log_msqrtR)
 
-for (rownum in 1:nrows(lookup_keys)) {
+for (rownum in 1:NROW(lookup_keys)) {
     py_output = py_surrogate[[lookup_keys[[rownum]]]]$evaluate(test_positions_py)
     py_mean = py_output$mean[1]
 
