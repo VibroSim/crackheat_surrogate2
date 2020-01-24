@@ -184,11 +184,20 @@ def eval_crackheat_singlesurrogate(params):
     
     # find peaks in sd
     sd_expanded = bigsur_out["sd"].reshape(biggrid_expanded[0].shape)
-    
+
     sd_peaks = ( (sd_expanded[1:-1,1:-1] > sd_expanded[0:-2,1:-1]) &
                  (sd_expanded[1:-1,1:-1] > sd_expanded[2:,1:-1]) &
                  (sd_expanded[1:-1,1:-1] > sd_expanded[1:-1,0:-2]) &
                  (sd_expanded[1:-1,1:-1] > sd_expanded[1:-1,2:]))
+
+    # find peaks in mean
+    
+    mean_expanded = bigsur_out["mean"].reshape(biggrid_expanded[0].shape)
+    
+    mean_peaks = ( (mean_expanded[1:-1,1:-1] > mean_expanded[0:-2,1:-1]) &
+                   (mean_expanded[1:-1,1:-1] > mean_expanded[2:,1:-1]) &
+                   (mean_expanded[1:-1,1:-1] > mean_expanded[1:-1,0:-2]) &
+                   (mean_expanded[1:-1,1:-1] > mean_expanded[1:-1,2:]))
     
     #sd_peaklocs = np.where(sd_peaks)
     
@@ -197,11 +206,21 @@ def eval_crackheat_singlesurrogate(params):
     sd_peak_log_msqrtR = biggrid_expanded[1][1:-1,1:-1][sd_peaks]
     
     sd_peaksort = np.argsort(sd_peakvals)
+
+    mean_peakvals = mean_expanded[1:-1,1:-1][mean_peaks]
+    mean_peak_mu = biggrid_expanded[0][1:-1,1:-1][mean_peaks]
+    mean_peak_log_msqrtR = biggrid_expanded[1][1:-1,1:-1][mean_peaks]
+    
+    mean_peaksort = np.argsort(mean_peakvals)
+
     
     peakidx=-1
-    for peakidx in range(min(2,sd_peakvals.shape[0])): # Use up to 2 peaks corresponding to relative maxima
-        mu_val = sd_peak_mu[sd_peaksort][-peakidx-1]
-        log_msqrtR_val = sd_peak_log_msqrtR[sd_peaksort][-peakidx-1]
+    for peakidx in range(min(2,mean_peakvals.shape[0])): # Use up to 2 peaks corresponding to relative maxima
+        #mu_val = sd_peak_mu[sd_peaksort][-peakidx-1]
+        #log_msqrtR_val = sd_peak_log_msqrtR[sd_peaksort][-peakidx-1]
+
+        mu_val = mean_peak_mu[mean_peaksort][-peakidx-1]
+        log_msqrtR_val = mean_peak_log_msqrtR[mean_peaksort][-peakidx-1]
         
         #raise ValueError("debug!")
         if only_on_gridlines_bool:
@@ -240,8 +259,11 @@ def eval_crackheat_singlesurrogate(params):
     
     if peakidx < 2:
         # Did not display 2 peaks corresponding to relative maxima... Use peak corresponding to absolute maximum as well
-        idx_absmax = np.argmax(sd_expanded)
-        idxs_absmax = np.unravel_index(idx_absmax,sd_expanded.shape)
+        #idx_absmax = np.argmax(sd_expanded)
+        #idxs_absmax = np.unravel_index(idx_absmax,sd_expanded.shape)
+
+        idx_absmax = np.argmax(mean_expanded)
+        idxs_absmax = np.unravel_index(idx_absmax,mean_expanded.shape)
         
         mu_val = biggrid_expanded[0][idxs_absmax]
         log_msqrtR_val = biggrid_expanded[1][idxs_absmax]
