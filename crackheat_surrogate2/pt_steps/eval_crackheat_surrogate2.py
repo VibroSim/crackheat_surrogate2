@@ -232,7 +232,7 @@ def run(_xmldoc,_element,
             #raise ValueError("debug!")
             if only_on_gridlines_bool:
                 (mu_val,
-                 log_msqrtR_val) = snap_to_gridlines(surrogate,
+                 log_msqrtR_val) = snap_to_gridlines(surrogates[surrogate_key],
                                                      mu_val,
                                                      log_msqrtR_val)
                 
@@ -275,7 +275,7 @@ def run(_xmldoc,_element,
 
             if only_on_gridlines_bool:
                 (mu_val,
-                 log_msqrtR_val) = snap_to_gridlines(surrogate,
+                 log_msqrtR_val) = snap_to_gridlines(surrogates[surrogate_key],
                                                      mu_val,
                                                      log_msqrtR_val)
                 pass
