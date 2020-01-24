@@ -1,7 +1,7 @@
 import sys
 import os
 import numpy as np
-
+import threading
 
 from crackclosuresim2 import crackopening_from_tensile_closure
 from crackclosuresim2 import load_closurestress
@@ -111,11 +111,15 @@ training_eval_output = training_eval(testgrid,tortuosity,leftclosure,rightclosur
 
 """
 
-def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,multiprocessing_pool = None):
+def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,multiprocessing_pool = None,multiprocessing_lock = None):
     """ NOTE: tortuosity should be angular standard deviation in degrees!!!"""
     #print("bendingstress=%s" % (str(bendingstress)))
     mu=np.array(testgrid["mu"],dtype='d')
     log_msqrtR=np.array(testgrid["log_msqrtR"],dtype='d')
+
+    if multiprocessing_lock is None:
+        multiprocessing_lock = threading.Lock() # Won't do anything since it is private
+        pass
 
     verbose=False
     doplots=False
@@ -227,7 +231,22 @@ def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,
         resultlist = map(afm_calc,paramlist)
         pass
     else:
-        resultlist = multiprocessing_pool.map(afm_calc,paramlist)
+        #  Because multiprocessing.Pool() is rumored to be thread-unsafe
+        # we decompose it into asynchronous operations that are protected by multiprocessing_lock
+        #resultlist = multiprocessing_pool.map(afm_calc,paramlist)
+        multiprocessing_lock.acquire()
+        asyncresult = multiprocessing_pool.map_async(afm_calc,paramlist)
+        multiprocessing_lock.release()
+
+        # asyncresult.wait() ought to be safe because it is a call to the threading library's wait() function under the hood
+        asyncresult.wait()
+        multiprocessing_lock.acquire()
+        try:
+            resultlist = asyncresult.get()
+            pass
+        finally:
+            multiprocessing_lock.release()
+            pass
         pass
     
     totalpower_toconcat=[]
