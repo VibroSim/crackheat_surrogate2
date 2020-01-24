@@ -17,8 +17,8 @@ from limatix.dc_value import xmltreevalue as xmltreev
 from limatix.dc_value import numericunitsvalue as numericunitsv
 from limatix.xmldoc import xmldoc
 
-from crackheat_surrogate.load_surrogate import load_denorm_surrogates_from_jsonfile
-from crackheat_surrogate.training_eval import training_eval
+from crackheat_surrogate2.load_surrogate import load_denorm_surrogates_from_jsonfile
+from crackheat_surrogate2.training_eval import training_eval
 
 surrogate_eval_nsmap={
     "dc": "http://limatix.org/datacollect",
