@@ -44,7 +44,7 @@ def afm_calc(params):
                                                         1.0, # vibration_frequency.... we use 1.0 for frequency so as to obtain heating per cycle
                                                         crack_model_normal,
                                                         crack_model_shear,
-                                                        1.0,
+                                                        1.0, # crack_model_shear_factor currently hardwired to 1.0
                                                         np.exp(log_msqrtR_val),
                                                         "quarterpenny",
                                                         None,

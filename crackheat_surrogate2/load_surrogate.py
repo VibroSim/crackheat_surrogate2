@@ -504,6 +504,8 @@ class denormalized_surrogate(surrogate_model):
     bendingstress = None
     dynamicnormalstressampl = None
     dynamicshearstressampl = None
+    thermalpower = None
+    excfreq = None
 
     def evaluate(self,new_positions,meanonly=False,accel_trisolve_devs=None):
 
@@ -592,6 +594,12 @@ class denormalized_surrogate(surrogate_model):
         dynamicshearstressampl = float(surrogate_json["value"][dynamicshearstressampl_index]["value"][0])
         
 
+        thermalpower_index = surrogate_json["attributes"]["names"]["value"].index("thermalpower")
+        thermalpower = float(surrogate_json["value"][thermalpower_index]["value"][0])
+
+        excfreq_index = surrogate_json["attributes"]["names"]["value"].index("excfreq")
+        excfreq = float(surrogate_json["value"][excfreq_index]["value"][0])
+
         
         return  super(denormalized_surrogate,cls).fromjson(model_json,
                                                            params_nominal = params_nominal,
@@ -600,6 +608,8 @@ class denormalized_surrogate(surrogate_model):
                                                            bendingstress=bendingstress,
                                                            dynamicnormalstressampl=dynamicnormalstressampl,
                                                            dynamicshearstressampl=dynamicshearstressampl,
+                                                           thermalpower,
+                                                           excfreq,
                                                            **kwargs)
     pass
 
