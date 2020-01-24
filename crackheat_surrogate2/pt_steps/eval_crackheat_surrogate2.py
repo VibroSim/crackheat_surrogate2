@@ -103,7 +103,7 @@ def plot_slices(_dest_href,
             title += " ln msqrtR = %f ln(sqrt(m)/(m*m))" % (log_msqrtR_val)
             pass
         pl.title(title)
-        outputplot_href = hrefv("%s_surrogateeval_%.2d_%fMPa_%fMPa_%fMPa_%.2d.png" % (dc_specimen_str,bendingstress/1e6,dynamicnormalstressampl/1e6,dynamicshearstressampl/1e6,peakidx,axis),contexthref=_dest_href)
+        outputplot_href = hrefv("%s_surrogateeval_%.2d_%fMPa_%fMPa_%fMPa_%.2d.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=_dest_href)
         
         pl.savefig(outputplot_href.getpath(),dpi=300)
         plot_el = surrogate_eval_doc.addelement(surrogate_eval_doc.getroot(),"dc:surrogateplot")
