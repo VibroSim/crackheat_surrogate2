@@ -91,10 +91,12 @@ def plot_slices(_dest_href,
                 testgrid_var_vals/axisunitfactor[axis],sur_out['lower95'],'--',
                 testgrid_var_vals/axisunitfactor[axis],direct+direct_stddev,':',
                 testgrid_var_vals/axisunitfactor[axis],sur_out['upper95'],'--',
-                testgrid_var_vals/axisunitfactor[axis],direct-direct_stddev,':')
+                testgrid_var_vals/axisunitfactor[axis],direct-direct_stddev,':',
+                (testgrid_var_vals[0]/axisunitfactor[axis],testgrid_var_vals[-1]/axisunitfactor[axis]),surrogate.thermalpower/surrogate.excfreq,'-')
         pl.grid()
         pl.xlabel('%s (%s)' % (axisnames[axis],axisunits[axis]))
-        pl.legend(('Surrogate','Direct','Surrogate bounds','Direct bounds'),loc='best')
+        pl.ylabel('Heating per cycle (Joules)')
+        pl.legend(('Surrogate','Direct','Surrogate bounds','Direct bounds','Observation'),loc='best')
         title = ""
         if axis != 0:
             title += " mu = %f" % (mu_val)
@@ -102,8 +104,10 @@ def plot_slices(_dest_href,
         if axis != 1:
             title += " ln msqrtR = %f ln(sqrt(m)/(m*m))" % (log_msqrtR_val)
             pass
+        
+        title += "\nbending=%.1f MPa normal=%.1f MPa shear=%.1f MPa" % (surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressamp/1e6)
         pl.title(title)
-        outputplot_href = hrefv("%s_surrogateeval_%.2d_%fMPa_%fMPa_%fMPa_%.2d.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=_dest_href)
+        outputplot_href = hrefv("%s_surrogateeval_%.2d_%.1fMPa_%.1fMPa_%.1fMPa_%.2d.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=_dest_href)
         
         pl.savefig(outputplot_href.getpath(),dpi=300)
         plot_el = surrogate_eval_doc.addelement(surrogate_eval_doc.getroot(),"dc:surrogateplot")
@@ -185,8 +189,8 @@ def run(_xmldoc,_element,
 
     # rough equivalent of R expand.grid():
     biggrid_expanded = np.meshgrid(
-        np.linspace(min_vals[0],max_vals[0],11), # mu
-        np.linspace(min_vals[1],max_vals[1],14)) # log_msqrtR
+        np.linspace(min_vals[0],max_vals[0],7), # mu
+        np.linspace(min_vals[1],max_vals[1],8)) # log_msqrtR
 
     biggrid = np.stack(biggrid_expanded,-1).reshape(-1,2)
     
