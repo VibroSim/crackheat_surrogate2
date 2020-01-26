@@ -119,7 +119,7 @@ def plot_slices(_dest_href,
                 
             title += "\nbending=%.1f MPa normal=%.1f MPa shear=%.1f MPa" % (surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6)
             pl.title(title)
-            outputplot_href = hrefv("%s_surrogateeval_%.2d_%.1fMPa_%.1fMPa_%.1fMPa_%.2d.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=_dest_href)
+            outputplot_href = hrefv("%s_surrogateeval_%.1fMPa_%.1fMPa_%.1fMPa_%.2d_%.1d.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=_dest_href)
         
             pl.savefig(outputplot_href.getpath(),dpi=300)
             plot_el = surrogate_eval_doc.addelement(surrogate_eval_doc.getroot(),"dc:surrogateplot")
@@ -178,7 +178,8 @@ def eval_crackheat_singlesurrogate(params):
      axisunits,
      axisunitfactor,
      min_vals,
-     max_vals) = fixedparams
+     max_vals,
+     dc_ecs_traces_per_data_point_float) = fixedparams
     
     bigsur_out = surrogates[surrogate_key].evaluate(biggrid_dataframe)
     
@@ -213,9 +214,16 @@ def eval_crackheat_singlesurrogate(params):
     
     mean_peaksort = np.argsort(mean_peakvals)
 
+    num_peaks_per_datapoint = dc_ecs_traces_per_data_point_float/2.0 # 2.0 is number of axes
+
+    max_peaks_per_datapoint=int(ceil(num_peaks_per_datapoint))
     
     peakidx=-1
-    for peakidx in range(min(2,mean_peakvals.shape[0])): # Use up to 2 peaks corresponding to relative maxima
+    for peakidx in range(min(max_peaks_per_datapoint,mean_peakvals.shape[0])): # Use up to 2 peaks corresponding to relative maxima
+
+        rand_val = np.random.rand()
+        if rand_val > (num_peaks_per_datapoint/max_peaks_per_datapoint):
+            continue # skip this point
         #mu_val = sd_peak_mu[sd_peaksort][-peakidx-1]
         #log_msqrtR_val = sd_peak_log_msqrtR[sd_peaksort][-peakidx-1]
 
@@ -257,7 +265,8 @@ def eval_crackheat_singlesurrogate(params):
         
     peakidx += 1
     
-    if peakidx < 2:
+    rand_val = np.random.rand()
+    if peakidx < max_peaks_per_data_point and rand_val <= (num_peaks_per_datapoint/max_peaks_per_datapoint):
         # Did not display 2 peaks corresponding to relative maxima... Use peak corresponding to absolute maximum as well
         #idx_absmax = np.argmax(sd_expanded)
         #idxs_absmax = np.unravel_index(idx_absmax,sd_expanded.shape)
@@ -318,6 +327,7 @@ def run(_xmldoc,_element,
         dc_spcYoungsModulus_numericunits,
         dc_spcPoissonsRatio_numericunits,
         dc_surrogate_href,
+        dc_ecs_traces_per_data_point_float=1.0,
         numdraws_int = 10,
         only_on_gridlines_bool = False,
         crack_model_normal_type_str = "Tada_ModeI_CircularCrack_along_midline",
@@ -387,7 +397,8 @@ def run(_xmldoc,_element,
                  axisunits,
                  axisunitfactor,
                  min_vals,
-                 max_vals)
+                 max_vals,
+                 dc_ecs_traces_per_data_point_float)
     
     paramlist = []
 
@@ -405,5 +416,5 @@ def run(_xmldoc,_element,
     
     return {
         "dc:surrogate_eval": xmltreev(surrogate_eval_doc)
-        }
+    }
 
