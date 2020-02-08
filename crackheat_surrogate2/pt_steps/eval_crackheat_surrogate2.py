@@ -214,15 +214,15 @@ def eval_crackheat_singlesurrogate(params):
     
     mean_peaksort = np.argsort(mean_peakvals)
 
-    num_peaks_per_datapoint = dc_ecs_traces_per_data_point_float/2.0 # 2.0 is number of axes
+    num_peaks_per_data_point = dc_ecs_traces_per_data_point_float/2.0 # 2.0 is number of axes
 
-    max_peaks_per_datapoint=int(ceil(num_peaks_per_datapoint))
+    max_peaks_per_data_point=int(np.ceil(num_peaks_per_data_point))
     
     peakidx=-1
-    for peakidx in range(min(max_peaks_per_datapoint,mean_peakvals.shape[0])): # Use up to 2 peaks corresponding to relative maxima
+    for peakidx in range(min(max_peaks_per_data_point,mean_peakvals.shape[0])): # Use up to 2 peaks corresponding to relative maxima
 
         rand_val = np.random.rand()
-        if rand_val > (num_peaks_per_datapoint/max_peaks_per_datapoint):
+        if rand_val > (num_peaks_per_data_point/max_peaks_per_data_point):
             continue # skip this point
         #mu_val = sd_peak_mu[sd_peaksort][-peakidx-1]
         #log_msqrtR_val = sd_peak_log_msqrtR[sd_peaksort][-peakidx-1]
@@ -266,7 +266,7 @@ def eval_crackheat_singlesurrogate(params):
     peakidx += 1
     
     rand_val = np.random.rand()
-    if peakidx < max_peaks_per_data_point and rand_val <= (num_peaks_per_datapoint/max_peaks_per_datapoint):
+    if peakidx < max_peaks_per_data_point and rand_val <= (num_peaks_per_data_point/max_peaks_per_data_point):
         # Did not display 2 peaks corresponding to relative maxima... Use peak corresponding to absolute maximum as well
         #idx_absmax = np.argmax(sd_expanded)
         #idxs_absmax = np.unravel_index(idx_absmax,sd_expanded.shape)

@@ -38,7 +38,7 @@ def run(_xmldoc,_element,
     # load in crackheat table so that we can precalculate separate surrogates for each tuple of (normal stress, shear stress, bending stress) values
     #crackheatfile_dataframe = pd.read_csv(dc_crackheat_table_href.getpath(),dtype={"DynamicNormalStressAmpl (Pa)": str, "DynamicShearStressAmpl (Pa)": str, "BendingStress (Pa)": str})
 
-    #lookup_keys = "dnsa_pa_" + crackheatfile_dataframe["DynamicNormalStressAmpl (Pa)"] + "_dssa_pa_" + crackheatfile_dataframe["DynamicShearStressAmpl (Pa)"] + "_bs_pa_" + crackheatfile_dataframe["BendingStress (Pa)"]
+    #lookup_keys = "bs_pa_" + crackheatfile_dataframe["BendingStress (Pa)"] + "_dnsa_pa_" + crackheatfile_dataframe["DynamicNormalStressAmpl (Pa)"] + "_dssa_pa_" + crackheatfile_dataframe["DynamicShearStressAmpl (Pa)"]
 
     #DynamicNormalStressAmpl = crackheatfile_dataframe["DynamicNormalStressAmpl (Pa)"].map(float)
     #DynamicShearStressAmpl = crackheatfile_dataframe["DynamicShearStressAmpl (Pa)"].map(float)
