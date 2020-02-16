@@ -80,13 +80,13 @@ py_sys=import('sys')
 #msqrtR = seq(500000,50e6,length=5) # m*sqrtR (asperities*sqrt(m)/m^2
 
 # ***!!! As we change the ranges, should also change min_vals and max_vals in pt_steps/eval_crackheat_surrogate to match!***
-mu = seq(0.02,2.0,length=num_mus)
+mu = seq(0.02,1.0,length=num_mus)
 log_msqrtR = seq(9.2,18.4,length=num_msqrtRs) # log(m*sqrtR) log(asperities*sqrt(m)/m^2
 
 # Covariance values indicating region of significance
 # for each sample.... for now just use our grid step
-mu_cov = (mu[2]-mu[1])*4.0
-log_msqrtR_cov = (log_msqrtR[2]-log_msqrtR[1])*4.0
+mu_cov = (mu[2]-mu[1])*6.0
+log_msqrtR_cov = (log_msqrtR[2]-log_msqrtR[1])*6.0
 
 heating_response_stddev = 1e-6 # assumed variability in temperature output (W/m^2/Hz)
 
