@@ -34,7 +34,7 @@ eval_crackheat_threadpool = multiprocessing.dummy.Pool()
 eval_crackheat_threadlock = threading.Lock()  # MUST be used when calling multiprocessing functions, matplotlib functions, and lxml functions from thread
 
 
-def plot_slices(_dest_href,
+def plot_slices(dc_dest_href,
                 dc_specimen_str,
                 dc_closurestress_side1_href,
                 dc_closurestress_side2_href,
@@ -119,7 +119,7 @@ def plot_slices(_dest_href,
                 
             title += "\nbending=%.1f MPa normal=%.1f MPa shear=%.1f MPa" % (surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6)
             pl.title(title)
-            outputplot_href = hrefv("%s_surrogateeval_%.1fMPa_%.1fMPa_%.1fMPa_%.2d_%.1d.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=_dest_href)
+            outputplot_href = hrefv("%s_surrogateeval_%.1fMPa_%.1fMPa_%.1fMPa_%.2d_%.1d.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=dc_dest_href)
         
             pl.savefig(outputplot_href.getpath(),dpi=300)
             plot_el = surrogate_eval_doc.addelement(surrogate_eval_doc.getroot(),"dc:surrogateplot")
@@ -161,7 +161,7 @@ def eval_crackheat_singlesurrogate(params):
      biggrid_expanded,
      biggrid_dataframe,
      only_on_gridlines_bool,
-     _dest_href,
+     dc_dest_href,
      dc_specimen_str,
      dc_closurestress_side1_href,
      dc_closurestress_side2_href,
@@ -239,7 +239,7 @@ def eval_crackheat_singlesurrogate(params):
                 
             pass
             
-        plot_slices(_dest_href,
+        plot_slices(dc_dest_href,
                     dc_specimen_str,
                     dc_closurestress_side1_href,
                     dc_closurestress_side2_href,
@@ -285,7 +285,7 @@ def eval_crackheat_singlesurrogate(params):
                                                  log_msqrtR_val)
             pass
             
-        plot_slices(_dest_href,
+        plot_slices(dc_dest_href,
                     dc_specimen_str,
                     dc_closurestress_side1_href,
                     dc_closurestress_side2_href,
@@ -314,7 +314,7 @@ def eval_crackheat_singlesurrogate(params):
         
 
 def run(_xmldoc,_element,
-        _dest_href,
+        dc_dest_href,
         _inputfilename,
         dc_specimen_str,
         dc_spcmaterial_str,
@@ -380,7 +380,7 @@ def run(_xmldoc,_element,
                  biggrid_expanded,
                  biggrid_dataframe,
                  only_on_gridlines_bool,
-                 _dest_href,
+                 dc_dest_href,
                  dc_specimen_str,
                  dc_closurestress_side1_href,
                  dc_closurestress_side2_href,

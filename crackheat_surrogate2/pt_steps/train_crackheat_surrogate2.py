@@ -14,7 +14,7 @@ from limatix.dc_value import numericunitsvalue as numericunitsv
 from crackheat_surrogate2 import get_rscripts_path
 
 def run(_xmldoc,_element,
-        _dest_href,
+        dc_dest_href,
         _inputfilename,
         dc_specimen_str,
         dc_spcmaterial_str,
@@ -51,7 +51,7 @@ def run(_xmldoc,_element,
     E=dc_spcYoungsModulus_numericunits.value("Pa")
     nu = dc_spcPoissonsRatio_numericunits.value("unitless")   #Poisson's Ratio
 
-    outputfile_href = hrefv("%s_surrogates.json" % (dc_specimen_str),contexthref=_dest_href)
+    outputfile_href = hrefv("%s_surrogates.json" % (dc_specimen_str),contexthref=dc_dest_href)
 
     
         
