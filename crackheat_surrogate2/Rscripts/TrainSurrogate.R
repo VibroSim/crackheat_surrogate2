@@ -85,8 +85,8 @@ log_msqrtR = seq(9.2,18.4,length=num_msqrtRs) # log(m*sqrtR) log(asperities*sqrt
 
 # Covariance values indicating region of significance
 # for each sample.... for now just use our grid step
-mu_cov = (mu[2]-mu[1])*6.0
-log_msqrtR_cov = (log_msqrtR[2]-log_msqrtR[1])*6.0
+mu_cov = (mu[2]-mu[1])*1.0
+log_msqrtR_cov = (log_msqrtR[2]-log_msqrtR[1])*1.0
 
 heating_response_stddev = 1e-6 # assumed variability in temperature output (W/m^2/Hz)
 
@@ -202,7 +202,13 @@ for (rownum in 1:NROW(lookup_keys)) {
 
     # add modeldata into all_surrogates
     all_surrogates[[lookup_keys[[rownum]]]] = modeldata
-    # p <- predict.km(modeldata$model, newdata = data.frame(x = t), type = "UK")
+    ## p <- predict.km(modeldata$model, newdata = data.frame(x = t), type = "UK")
+    # mu_test_vals = seq(from=.02,to=1.0,by=.01)
+    # log_msqrtR_test_val = testgrid[67,2]
+    # 
+    # p <- predict.km(modeldata$model, newdata = data.frame(mu_norm = mu_test_vals/mu_nominal, log_msqrtR_norm = log_msqrtR_test_val/log_msqrtR_nominal), type="UK")
+    # plot(testgrid[67:77,1],heating_response_norm[67:77])
+    # lines(mu_test_vals,p$mean)
 }
 
 write(serializeJSON(all_surrogates,digits=NA),file=output_filename)
