@@ -155,8 +155,11 @@ class surrogate_model_shear(object):
                                      new_positions["x"],
                                      new_positions["x"]**2.0),dtype='d').T
             pass
-        elif self.trend_formula==['~mu_norm + log_msqrtR_norm + log_crack_model_shear_factor + I(mu_norm^2) + I(log_msqrtR_norm^2) + ',
-                                  '    I(log_crack_model_shear_factor^2) + I(mu_norm * log_msqrtR_norm) + I(mu_norm * log_crack_model_shear_factor) + I(log_msqrtR_norm * log_crack_model_shear_factor)']:
+        elif self.trend_formula==['~mu_norm + log_msqrtR_norm + log_crack_model_shear_factor + I(mu_norm^2) + ',
+                                  '    I(log_msqrtR_norm^2) + I(log_crack_model_shear_factor^2) + ',
+                                  '    I(mu_norm * log_msqrtR_norm) + I(mu_norm * log_crack_model_shear_factor) + ',
+                                  '    I(log_msqrtR_norm * log_crack_model_shear_factor)']:
+
              # Full linear and quadratic in mu and log_msqrtR, all normalized 
             formula_values=np.array((np.ones(new_positions.shape[0],dtype='d'),
                                      new_positions["mu_norm"],
@@ -175,8 +178,10 @@ class surrogate_model_shear(object):
 
     def eval_formula_values_deriv_k(self,new_positions,k):
         # Can only handle pre-programmed formulas...
-        if self.trend_formula==['~mu_norm + log_msqrtR_norm + log_crack_model_shear_factor + I(mu_norm^2) + I(log_msqrtR_norm^2) + ',
-                                  '    I(log_crack_model_shear_factor^2) + I(mu_norm * log_msqrtR_norm) + I(mu_norm * log_crack_model_shear_factor) + I(log_msqrtR_norm * log_crack_model_shear_factor)']:
+        if self.trend_formula==['~mu_norm + log_msqrtR_norm + log_crack_model_shear_factor + I(mu_norm^2) + ',
+                                  '    I(log_msqrtR_norm^2) + I(log_crack_model_shear_factor^2) + ',
+                                  '    I(mu_norm * log_msqrtR_norm) + I(mu_norm * log_crack_model_shear_factor) + ',
+                                  '    I(log_msqrtR_norm * log_crack_model_shear_factor)']:
             # Full linear and quadratic in mu and log_msqrtR and log_crack_model_shear_factor, where mu and log_msqrtR are normalized
             if k=="mu_norm":
                 formula_values_deriv_k=np.array((np.zeros(new_positions.shape[0],dtype='d'),
