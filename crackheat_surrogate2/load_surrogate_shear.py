@@ -541,7 +541,7 @@ class denormalized_surrogate_shear(surrogate_model_shear):
                                                  "log_msqrtR_norm": new_positions["log_msqrtR"]/self.params_nominal["log_msqrtR"],
                                                  "log_crack_model_shear_factor": new_positions["log_crack_model_shear_factor"]})
         
-        resdict = super(denormalized_surrogate,self).evaluate(normalized_new_positions,meanonly=meanonly,accel_trisolve_devs=accel_trisolve_devs)
+        resdict = super(denormalized_surrogate_shear,self).evaluate(normalized_new_positions,meanonly=meanonly,accel_trisolve_devs=accel_trisolve_devs)
 
         resdict["mean"] *= self.output_nominal
         if not meanonly: 
@@ -564,7 +564,7 @@ class denormalized_surrogate_shear(surrogate_model_shear):
                                                  "log_msqrtR_norm": new_positions["log_msqrtR"]/self.params_nominal["log_msqrtR"],
                                                  "log_crack_model_shear_factor": new_positions["log_crack_model_shear_factor"]})
         
-        derivative_wrt_normalized = super(denormalized_surrogate,self).evaluate_derivative(normalized_new_positions,k_norm,accel_trisolve_devs=accel_trisolve_devs)
+        derivative_wrt_normalized = super(denormalized_surrogate_shear,self).evaluate_derivative(normalized_new_positions,k_norm,accel_trisolve_devs=accel_trisolve_devs)
         
         # So the superclass evaluates
         #   surrogate(coordinates/coordinates_nominal)/output_nominal
@@ -582,9 +582,9 @@ class denormalized_surrogate_shear(surrogate_model_shear):
         # =d[surrogate(coordinates/coordinates_nominal)/output_nominal]/d(coordinate_normalized_k*coordinate_nominal_k)
         # =d[surrogate(coordinates/coordinates_nominal)/output_nominal]/d(coordinate_normalized_k)  / coordinate_nominal_k)
         # where d[surrogate(coordinates/coordinates_nominal)/output_nominal]/d(coordinate_normalized_k) = 
-        #  super(denormalized_surrogate,self).evaluate_derivative(normalized_new_positions,k)
+        #  super(denormalized_surrogate_shear,self).evaluate_derivative(normalized_new_positions,k)
 
-        # so result is super(denormalized_surrogate,self).evaluate_derivative(normalized_new_positions,k) * output_nominal / coordinate_nominal_k
+        # so result is super(denormalized_surrogate_shear,self).evaluate_derivative(normalized_new_positions,k) * output_nominal / coordinate_nominal_k
         return derivative_wrt_normalized * self.output_nominal / self.params_nominal[k]
         
 
@@ -637,16 +637,16 @@ class denormalized_surrogate_shear(surrogate_model_shear):
         excfreq = float(surrogate_json["value"][excfreq_index]["value"][0])
 
         
-        return  super(denormalized_surrogate,cls).fromjson(model_json,
-                                                           params_nominal = params_nominal,
-                                                           output_nominal = output_nominal,
-                                                           closure_lowest_avg_load_used=closure_lowest_avg_load_used,
-                                                           bendingstress=bendingstress,
-                                                           dynamicnormalstressampl=dynamicnormalstressampl,
-                                                           dynamicshearstressampl=dynamicshearstressampl,
-                                                           thermalpower=thermalpower,
-                                                           excfreq=excfreq,
-                                                           **kwargs)
+        return  super(denormalized_surrogate_shear,cls).fromjson(model_json,
+                                                                 params_nominal = params_nominal,
+                                                                 output_nominal = output_nominal,
+                                                                 closure_lowest_avg_load_used=closure_lowest_avg_load_used,
+                                                                 bendingstress=bendingstress,
+                                                                 dynamicnormalstressampl=dynamicnormalstressampl,
+                                                                 dynamicshearstressampl=dynamicshearstressampl,
+                                                                 thermalpower=thermalpower,
+                                                                 excfreq=excfreq,
+                                                                 **kwargs)
     pass
 
 
@@ -657,7 +657,7 @@ class nonnegative_denormalized_surrogate_shear(denormalized_surrogate_shear):
 
 
     def evaluate(self,new_positions,meanonly=False,accel_trisolve_devs=None):
-        resdict = super(nonnegative_denormalized_surrogate,self).evaluate(new_positions,meanonly=meanonly,accel_trisolve_devs=accel_trisolve_devs)
+        resdict = super(nonnegative_denormalized_surrogate_shear,self).evaluate(new_positions,meanonly=meanonly,accel_trisolve_devs=accel_trisolve_devs)
 
         resdict["mean"][resdict["mean"] < 0.0] = 0.0  # Remove negative numbers from mean
 
@@ -671,11 +671,11 @@ class nonnegative_denormalized_surrogate_shear(denormalized_surrogate_shear):
     def evaluate_derivative(self,new_positions,k,accel_trisolve_devs=None):
 
         # Need to evaluate function to find where it is negative
-        evaldict = super(nonnegative_denormalized_surrogate,self).evaluate(new_positions,meanonly=True,accel_trisolve_devs=accel_trisolve_devs)
+        evaldict = super(nonnegative_denormalized_surrogate_shear,self).evaluate(new_positions,meanonly=True,accel_trisolve_devs=accel_trisolve_devs)
 
         negative_zone = evaldict["mean"] < 0.0
 
-        derivative = super(nonnegative_denormalized_surrogate,self).evaluate_derivative(new_positions,k,accel_trisolve_devs=accel_trisolve_devs)
+        derivative = super(nonnegative_denormalized_surrogate_shear,self).evaluate_derivative(new_positions,k,accel_trisolve_devs=accel_trisolve_devs)
 
         # derivative is also zero in the negative_zone
 
@@ -688,7 +688,7 @@ class nonnegative_denormalized_surrogate_shear(denormalized_surrogate_shear):
     def fromjson(cls,surrogate_json,**kwargs):
         
         #surrogate_json = json.load(open('/tmp/test.json'))
-        return  super(nonnegative_denormalized_surrogate,cls).fromjson(surrogate_json,**kwargs)
+        return  super(nonnegative_denormalized_surrogate_shear,cls).fromjson(surrogate_json,**kwargs)
     pass
 
 def load_denorm_surrogates_shear_from_jsonfile(surrogates_jsonfile,nonneg=True,**kwargs):

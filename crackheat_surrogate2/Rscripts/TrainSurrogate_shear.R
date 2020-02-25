@@ -200,7 +200,7 @@ for (rownum in 1:NROW(lookup_keys)) {
     #coef_var = (100e-3)^2 
     #coef_cov = c(30e6,10e6,4e6,0.1)
     coef_var = (heating_response_stddev/heating_response_nominal)^2
-    coef_cov = c(mu_cov/mu_nominal,log_msqrtR_cov/log_msqrtR_nominal,log_crack_model_shear_factor)
+    coef_cov = c(mu_cov/mu_nominal,log_msqrtR_cov/log_msqrtR_nominal,log_crack_model_shear_factor_cov)
     
     # General formula for the trend, but not including coefficients
     #formula= ~mu_norm + log_msqrtR_norm + I(mu_norm^2) + I(log_msqrtR_norm^2) +  I(mu_norm*log_msqrtR_norm) 

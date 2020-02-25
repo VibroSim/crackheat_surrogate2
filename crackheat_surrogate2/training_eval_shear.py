@@ -201,7 +201,7 @@ def training_eval_shear(testgrid,bendingstress,dynamicnormalstress,dynamicshears
     # build dictionary of counts
     countdict = {}
     for uniqueidx in range(uniquevals.shape[1]):
-        key=(uniquevals[0,uniqueidx],)
+        key=(uniquevals[0,uniqueidx],uniquevals[1,uniqueidx],)
         countdict[key] = uniquecounts[uniqueidx]
         pass
     
