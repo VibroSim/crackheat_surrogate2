@@ -31,6 +31,8 @@ surrogate_eval_nsmap={
 
 eval_crackheat_pool = multiprocessing.Pool()
 eval_crackheat_threadpool = multiprocessing.dummy.Pool()
+#eval_crackheat_pool=None
+#eval_crackheat_threadpool=None
 eval_crackheat_threadlock = threading.Lock()  # MUST be used when calling multiprocessing functions, matplotlib functions, and lxml functions from thread
 
 
@@ -55,7 +57,11 @@ def plot_slices(dc_dest_href,
                 min_vals,
                 max_vals,
                 peakidx,
-                mu_val,log_msqrtR_val):
+                mu_val,log_msqrtR_val,
+                main_thread_todo_list,
+                main_thread_stuff_todo):
+
+    output_plots = []
     
     for axis in range(2):
         # parameters are mu, log_msqrtR
@@ -94,41 +100,71 @@ def plot_slices(dc_dest_href,
                                                numdraws_int,
                                                multiprocessing_pool=eval_crackheat_pool,
                                                multiprocessing_lock=eval_crackheat_threadlock)
-        
-        eval_crackheat_threadlock.acquire() # matplotlib is thread-unsafe.... this is definitely necessary... surrogate_eval_doc is also thread-unsafe...
-        try:
-            pl.figure()
-            pl.plot(testgrid_var_vals/axisunitfactor[axis],sur_out["mean"],'-',
-                    testgrid_var_vals/axisunitfactor[axis],direct,'-',
-                    testgrid_var_vals/axisunitfactor[axis],sur_out['lower95'],'--',
-                    testgrid_var_vals/axisunitfactor[axis],direct+direct_stddev,':',
-                    (testgrid_var_vals[0]/axisunitfactor[axis],testgrid_var_vals[-1]/axisunitfactor[axis]),(surrogate.thermalpower/surrogate.excfreq,surrogate.thermalpower/surrogate.excfreq),'-',
-                    testgrid_var_vals/axisunitfactor[axis],sur_out['upper95'],'--',
-                    testgrid_var_vals/axisunitfactor[axis],direct-direct_stddev,':')
-            pl.grid()
-            pl.xlabel('%s (%s)' % (axisnames[axis],axisunits[axis]))
-            pl.ylabel('Heating per cycle (Joules)')
-            pl.legend(('Surrogate','Direct','Surrogate bounds','Direct bounds','Observation'),loc='best')
-            title = ""
-            if axis != 0:
-                title += " mu = %f" % (mu_val)
-                pass
-            if axis != 1:
-                title += " ln msqrtR = %f ln(sqrt(m)/(m*m))" % (log_msqrtR_val)
-                pass
+
+        def gen_plot():
+            eval_crackheat_threadlock.acquire() # matplotlib is thread-unsafe.... this was definitely necessary... but maybe no longer now that execution is delegated back to main thread... surrogate_eval_doc is also thread-unsafe...
+            try:
+                pl.figure()
+                pl.plot(testgrid_var_vals/axisunitfactor[axis],sur_out["mean"],'-',
+                        testgrid_var_vals/axisunitfactor[axis],direct,'-',
+                        testgrid_var_vals/axisunitfactor[axis],sur_out['lower95'],'--',
+                        testgrid_var_vals/axisunitfactor[axis],direct+direct_stddev,':',
+                        (testgrid_var_vals[0]/axisunitfactor[axis],testgrid_var_vals[-1]/axisunitfactor[axis]),(surrogate.thermalpower/surrogate.excfreq,surrogate.thermalpower/surrogate.excfreq),'-',
+                        testgrid_var_vals/axisunitfactor[axis],sur_out['upper95'],'--',
+                        testgrid_var_vals/axisunitfactor[axis],direct-direct_stddev,':')
+                pl.grid()
+                pl.xlabel('%s (%s)' % (axisnames[axis],axisunits[axis]))
+                pl.ylabel('Heating per cycle (Joules)')
+                pl.legend(('Surrogate','Direct','Surrogate bounds','Direct bounds','Observation'),loc='best')
+                title = ""
+                if axis != 0:
+                    title += " mu = %f" % (mu_val)
+                    pass
+                if axis != 1:
+                    title += " ln msqrtR = %f ln(sqrt(m)/(m*m))" % (log_msqrtR_val)
+                    pass
                 
-            title += "\nbending=%.1f MPa normal=%.1f MPa shear=%.1f MPa" % (surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6)
-            pl.title(title)
-            outputplot_href = hrefv("%s_surrogateeval_%.1fMPa_%.1fMPa_%.1fMPa_%.2d_%.1d.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=dc_dest_href)
-        
-            pl.savefig(outputplot_href.getpath(),dpi=300)
-            plot_el = surrogate_eval_doc.addelement(surrogate_eval_doc.getroot(),"dc:surrogateplot")
-            outputplot_href.xmlrepr(surrogate_eval_doc,plot_el)
+                title += "\nbending=%.1f MPa normal=%.1f MPa shear=%.1f MPa" % (surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6)
+                pl.title(title)
+                outputplot_href = hrefv("%s_surrogateeval_%.1fMPa_%.1fMPa_%.1fMPa_%.2d_%.1d.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=dc_dest_href)
+                
+                pl.savefig(outputplot_href.getpath(),dpi=300)
+                plot_el = surrogate_eval_doc.addelement(surrogate_eval_doc.getroot(),"dc:surrogateplot")
+                outputplot_href.xmlrepr(surrogate_eval_doc,plot_el)
+                
+                output_plots.append(outputplot_href)
+                pass
+            finally:
+                eval_crackheat_threadlock.release() # pandas is documented as thread-unsafe.... this is probably unnecessary...
+                pass
             pass
-        finally:
-            eval_crackheat_threadlock.release() # pandas is documented as thread-unsafe.... this is probably unnecessary...
+
+        delegate_to_main_thread(main_thread_todo_list,main_thread_stuff_todo,gen_plot)
+        pass
+        
+    return output_plots
+
+def delegate_to_main_thread(main_thread_todo_list,main_thread_stuff_todo,action):
+    if action is not None:
+        #print("Delegating task: %d" % (id(action)))
+        complete_condition = threading.Condition()
+        pass
+    else:
+        #print("Terminating delegation")
+        complete_condition = None
+        pass
+
+    with main_thread_stuff_todo:
+        main_thread_todo_list.append((action,complete_condition))
+        main_thread_stuff_todo.notify()
+        pass
+
+    if action is not None:
+        with complete_condition: # Wait for execution to complete. 
+            complete_condition.wait()
             pass
         pass
+
     pass
 
 
@@ -179,8 +215,13 @@ def eval_crackheat_singlesurrogate(params):
      axisunitfactor,
      min_vals,
      max_vals,
-     dc_ecs_traces_per_data_point_float) = fixedparams
+     dc_ecs_traces_per_data_point_float,
+     main_thread_todo_list,
+     main_thread_stuff_todo) = fixedparams
+
+    #print("eval_crackheat_singlesurrogate")
     
+    output_plots = []
     bigsur_out = surrogates[surrogate_key].evaluate(biggrid_dataframe)
     
     # find peaks in sd
@@ -239,28 +280,30 @@ def eval_crackheat_singlesurrogate(params):
                 
             pass
             
-        plot_slices(dc_dest_href,
-                    dc_specimen_str,
-                    dc_closurestress_side1_href,
-                    dc_closurestress_side2_href,
-                    dc_a_side1_numericunits,
-                    dc_a_side2_numericunits,
-                    numdraws_int,
-                    crack_model_normal_type_str,
-                    crack_model_shear_type_str,
-                    sigma_yield,
-                    tau_yield,
-                    E,nu,
-                    tortuosity,
-                    surrogate_eval_doc,
-                    surrogates[surrogate_key],
-                    axisnames,
-                    axisunits,
-                    axisunitfactor,
-                    min_vals,
-                    max_vals,
-                    peakidx,
-                    mu_val,log_msqrtR_val)
+        output_plots.extend(plot_slices(dc_dest_href,
+                                        dc_specimen_str,
+                                        dc_closurestress_side1_href,
+                                        dc_closurestress_side2_href,
+                                        dc_a_side1_numericunits,
+                                        dc_a_side2_numericunits,
+                                        numdraws_int,
+                                        crack_model_normal_type_str,
+                                        crack_model_shear_type_str,
+                                        sigma_yield,
+                                        tau_yield,
+                                        E,nu,
+                                        tortuosity,
+                                        surrogate_eval_doc,
+                                        surrogates[surrogate_key],
+                                        axisnames,
+                                        axisunits,
+                                        axisunitfactor,
+                                        min_vals,
+                                        max_vals,
+                                        peakidx,
+                                        mu_val,log_msqrtR_val,
+                                        main_thread_todo_list,
+                                        main_thread_stuff_todo))
         pass
         
     peakidx += 1
@@ -285,32 +328,34 @@ def eval_crackheat_singlesurrogate(params):
                                                  log_msqrtR_val)
             pass
             
-        plot_slices(dc_dest_href,
-                    dc_specimen_str,
-                    dc_closurestress_side1_href,
-                    dc_closurestress_side2_href,
-                    dc_a_side1_numericunits,
-                    dc_a_side2_numericunits,
-                    numdraws_int,
-                    crack_model_normal_type_str,
-                    crack_model_shear_type_str,
-                    sigma_yield,
-                    tau_yield,
-                    E,nu,
-                    tortuosity,
-                    surrogate_eval_doc,
-                    surrogates[surrogate_key],
-                    axisnames,
-                    axisunits,
-                    axisunitfactor,
-                    min_vals,
-                    max_vals,
-                    peakidx,
-                    mu_val,log_msqrtR_val)
+        output_plots.extend(plot_slices(dc_dest_href,
+                                        dc_specimen_str,
+                                        dc_closurestress_side1_href,
+                                        dc_closurestress_side2_href,
+                                        dc_a_side1_numericunits,
+                                        dc_a_side2_numericunits,
+                                        numdraws_int,
+                                        crack_model_normal_type_str,
+                                        crack_model_shear_type_str,
+                                        sigma_yield,
+                                        tau_yield,
+                                        E,nu,
+                                        tortuosity,
+                                        surrogate_eval_doc,
+                                        surrogates[surrogate_key],
+                                        axisnames,
+                                        axisunits,
+                                        axisunitfactor,
+                                        min_vals,
+                                        max_vals,
+                                        peakidx,
+                                        mu_val,log_msqrtR_val,
+                                        main_thread_todo_list,
+                                        main_thread_stuff_todo))
         
         pass
         
-    pass
+    return output_plots
         
 
 def run(_xmldoc,_element,
@@ -375,6 +420,9 @@ def run(_xmldoc,_element,
 
     #raise ValueError("debug")
 
+    main_thread_todo_list=[]
+    main_thread_stuff_todo=threading.Condition()
+
     fixedparams=(surrogates,
                  surrogate_eval_doc,
                  biggrid_expanded,
@@ -398,7 +446,9 @@ def run(_xmldoc,_element,
                  axisunitfactor,
                  min_vals,
                  max_vals,
-                 dc_ecs_traces_per_data_point_float)
+                 dc_ecs_traces_per_data_point_float,
+                 main_thread_todo_list,
+                 main_thread_stuff_todo)
     
     paramlist = []
 
@@ -407,13 +457,57 @@ def run(_xmldoc,_element,
         paramlist.append(params)
         pass
 
+    
+
+
     if eval_crackheat_threadpool is None:
-        resultlist = map(eval_crackheat_singlesurrogate,paramlist)
+        resultlist = list(map(eval_crackheat_singlesurrogate,paramlist))
         pass
     else:
-        resultlist = eval_crackheat_threadpool.map(eval_crackheat_singlesurrogate,paramlist) # updates surrogate_eval_doc using proper locking
+        # We are running multi-threaded
+        mapthread_result_container=[]
+        #print("Spawning mapthread")
+        def mapthread_code():
+            generated_resultlist = list(eval_crackheat_threadpool.map(eval_crackheat_singlesurrogate,paramlist)) # updates surrogate_eval_doc using proper locking
+
+            mapthread_result_container.append(generated_resultlist)
+
+            #print("generated_resultlist=%s" % (str(generated_resultlist)))
+            delegate_to_main_thread(main_thread_todo_list,main_thread_stuff_todo,None) # None is an indicator that everything is complete
+            pass
+
+        mapthread = threading.Thread(target = mapthread_code) 
+        mapthread.start()
+        
+        #print("Working on delegated tasks")
+
+        # Do stuff delegated to us by threads
+        while True:
+            with main_thread_stuff_todo:
+
+                # Wait for something available. 
+                while len(main_thread_todo_list)==0:
+                    main_thread_stuff_todo.wait()
+                    pass
+                    
+                (todo,complete_condition) = main_thread_todo_list.pop()
+                #print("Got delegated task: %d" % (id(todo)))
+                if todo is None: # None is a flag indicating all is complete
+                    #print("All tasks complete")
+                    break
+                todo()  # Call function with stuff to do  in main thread (i.e. matplotlib plotting)
+                with complete_condition:
+                    complete_condition.notify() # Notify that we have completed this code. 
+                    pass
+                pass
+            pass
+        # Wait for mapthread to exit
+        mapthread.join()
+        resultlist = mapthread_result_container[0]
         pass
-    
+        
+
+
     return {
         "dc:surrogate_eval": xmltreev(surrogate_eval_doc)
     }

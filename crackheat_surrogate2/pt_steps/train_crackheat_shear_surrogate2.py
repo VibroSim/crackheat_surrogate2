@@ -35,7 +35,7 @@ def run(_xmldoc,_element,
         numdraws_int = 10,
         sheartraining_num_mus_int = 5,
         sheartraining_num_msqrtRs_int = 5,
-        sheartraining_num_shearfactors_int = 9,
+        sheartraining_num_shearfactors_int = 14,
         crack_model_normal_type_str = "Tada_ModeI_CircularCrack_along_midline",
         crack_model_shear_type_str = "Fabrikant_ModeII_CircularCrack_along_midline"):
 

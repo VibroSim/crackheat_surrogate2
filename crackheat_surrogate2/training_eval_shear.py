@@ -231,7 +231,7 @@ def training_eval_shear(testgrid,bendingstress,dynamicnormalstress,dynamicshears
 
     #
     if multiprocessing_pool is None:
-        resultlist = map(afm_calc_shear,paramlist)
+        resultlist = list(map(afm_calc_shear,paramlist))
         pass
     else:
         #  Because multiprocessing.Pool() is rumored to be thread-unsafe
@@ -245,7 +245,7 @@ def training_eval_shear(testgrid,bendingstress,dynamicnormalstress,dynamicshears
         asyncresult.wait()
         multiprocessing_lock.acquire()
         try:
-            resultlist = asyncresult.get()
+            resultlist = list(asyncresult.get())
             pass
         finally:
             multiprocessing_lock.release()
