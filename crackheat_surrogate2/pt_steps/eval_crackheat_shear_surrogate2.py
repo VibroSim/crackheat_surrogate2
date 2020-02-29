@@ -429,7 +429,7 @@ def run(_xmldoc,_element,
     # !!!*** NOTE: the bounds of the seq's in TrainSurrogate_shear.R
     # should match min_vals and max_vals!!!***
     min_vals = np.array((dc_sheartraining_min_mu_float,dc_sheartraining_min_log_msqrtR_float,-2.0),dtype='d')
-    max_vals = np.array((dc_sheartraining_max_mu_float,dc_sheartraining_max_log_msqrtR_float,4.0),dtype='d')
+    max_vals = np.array((dc_sheartraining_max_mu_float,dc_sheartraining_max_log_msqrtR_float,6.0),dtype='d')
 
     # rough equivalent of R expand.grid():
     biggrid_expanded = np.meshgrid(

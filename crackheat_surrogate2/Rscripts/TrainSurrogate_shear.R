@@ -89,7 +89,7 @@ py_sys=import('sys')
 # ***!!! As we change the ranges, should also change min_vals and max_vals in pt_steps/eval_crackheat_shear_surrogate2 to match!***
 mu = seq(min_mu,max_mu,length=num_mus)
 log_msqrtR = seq(min_log_msqrtR,max_log_msqrtR,length=num_log_msqrtRs) # log(m*sqrtR) log(asperities*sqrt(m)/m^2
-log_crack_model_shear_factor = seq(-1.0,4.0,length=num_log_crack_model_shear_factors) # 
+log_crack_model_shear_factor = seq(-1.0,6.0,length=num_log_crack_model_shear_factors) # 
 
 # Covariance values indicating region of significance
 # for each sample.... for now just use our grid step
