@@ -155,8 +155,8 @@ class surrogate_model(object):
                                      new_positions["x"],
                                      new_positions["x"]**2.0),dtype='d').T
             pass
-        elif self.trend_formula==['~log_mu_norm + log_msqrtR_norm + I(log_mu_norm^2) ',
-                                  '    + I(log_msqrtR_norm^2) + I(log_mu_norm * log_msqrtR_norm)']:
+        elif self.trend_formula==['~log_mu_norm + log_msqrtR_norm + I(log_mu_norm^2) + I(log_msqrtR_norm^2) ',
+                                  '    + I(log_mu_norm * log_msqrtR_norm)']:
              # Full linear and quadratic in log_mu and log_msqrtR, all normalized 
             formula_values=np.array((np.ones(new_positions.shape[0],dtype='d'),
                                      new_positions["log_mu_norm"],
@@ -171,8 +171,8 @@ class surrogate_model(object):
 
     def eval_formula_values_deriv_k(self,new_positions,k):
         # Can only handle pre-programmed formulas...
-        if self.trend_formula==['~log_mu_norm + log_msqrtR_norm + I(log_mu_norm^2) + ',
-                                  '    I(log_msqrtR_norm^2) + I(log_mu_norm * log_msqrtR_norm)']:
+        if self.trend_formula==['~log_mu_norm + log_msqrtR_norm + I(log_mu_norm^2) + I(log_msqrtR_norm^2) + ',
+                                  '    I(log_mu_norm * log_msqrtR_norm)']:
             # Full linear and quadratic in log_mu and log_msqrtR, all normalized
             if k=="log_mu_norm":
                 formula_values_deriv_k=np.array((np.zeros(new_positions.shape[0],dtype='d'),

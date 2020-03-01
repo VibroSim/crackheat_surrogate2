@@ -91,7 +91,7 @@ log_msqrtR_cov = (log_msqrtR[2]-log_msqrtR[1])*1.0
 heating_response_stddev = 1e-6 # assumed variability in temperature output (W/m^2/Hz)
 
 # Nominal values of physical quantities, for normalization
-log_mu_nominal=log(0.1)
+log_mu_nominal=abs(log(0.1)) # nominal values should be positive
 log_msqrtR_nominal = log(4e6)
 
 heating_response_nominal = 1e-6
