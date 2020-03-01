@@ -59,7 +59,7 @@ def covMatern5_2_deriv_x2_k(x1,x2,params,scaling_factor,var,k):
     # x1 and x2 are arrays for which the second (index 1) axis
     # lengths match. k is an index into that axis
 
-    k_index = {"mu_norm": 0, "log_msqrtR_norm": 1}[k]
+    k_index = {"log_mu_norm": 0, "log_msqrtR_norm": 1}[k]
 
     # matern 5/2 covariance is a product
     # of factors corresponding to the different indices into the
@@ -155,15 +155,15 @@ class surrogate_model(object):
                                      new_positions["x"],
                                      new_positions["x"]**2.0),dtype='d').T
             pass
-        elif self.trend_formula==['~mu_norm + log_msqrtR_norm + I(mu_norm^2) + I(log_msqrtR_norm^2) + ',
-                                  '    I(mu_norm * log_msqrtR_norm)']:
-             # Full linear and quadratic in mu and log_msqrtR, all normalized 
+        elif self.trend_formula==['~log_mu_norm + log_msqrtR_norm + I(log_mu_norm^2) ',
+                                  '    + I(log_msqrtR_norm^2) + I(log_mu_norm * log_msqrtR_norm)']:
+             # Full linear and quadratic in log_mu and log_msqrtR, all normalized 
             formula_values=np.array((np.ones(new_positions.shape[0],dtype='d'),
-                                     new_positions["mu_norm"],
+                                     new_positions["log_mu_norm"],
                                      new_positions["log_msqrtR_norm"],
-                                     new_positions["mu_norm"]**2.0,
+                                     new_positions["log_mu_norm"]**2.0,
                                      new_positions["log_msqrtR_norm"]**2.0,
-                                     new_positions["mu_norm"]*new_positions["log_msqrtR_norm"]),dtype='d').T
+                                     new_positions["log_mu_norm"]*new_positions["log_msqrtR_norm"]),dtype='d').T
             pass
         else:
             raise ValueError("Unknown formula: %s" % ("".join(self.trend_formula)))
@@ -171,14 +171,14 @@ class surrogate_model(object):
 
     def eval_formula_values_deriv_k(self,new_positions,k):
         # Can only handle pre-programmed formulas...
-        if self.trend_formula==['~mu_norm + log_msqrtR_norm + I(mu_norm^2) + I(log_msqrtR_norm^2) + ',
-                                  '    I(mu_norm * log_msqrtR_norm)']:
-            # Full linear and quadratic in mu and log_msqrtR, all normalized
-            if k=="mu_norm":
+        if self.trend_formula==['~log_mu_norm + log_msqrtR_norm + I(log_mu_norm^2) + ',
+                                  '    I(log_msqrtR_norm^2) + I(log_mu_norm * log_msqrtR_norm)']:
+            # Full linear and quadratic in log_mu and log_msqrtR, all normalized
+            if k=="log_mu_norm":
                 formula_values_deriv_k=np.array((np.zeros(new_positions.shape[0],dtype='d'),
                                                  np.ones(new_positions.shape[0],dtype='d'),
                                                  np.zeros(new_positions.shape[0],dtype='d'),
-                                                 2.0*new_positions["mu_norm"],
+                                                 2.0*new_positions["log_mu_norm"],
                                                  np.zeros(new_positions.shape[0],dtype='d'),
                                                  new_positions["log_msqrtR_norm"]),dtype='d').T
                 pass
@@ -188,10 +188,10 @@ class surrogate_model(object):
                                                  np.ones(new_positions.shape[0],dtype='d'),
                                                  np.zeros(new_positions.shape[0],dtype='d'),
                                                  2.0*new_positions["log_msqrtR_norm"],
-                                                 new_positions["mu_norm"]),dtype='d').T
+                                                 new_positions["log_mu_norm"]),dtype='d').T
                 pass
             else:
-                raise ValueError("k can only be (normalized) mu, log_msqrtR. ")
+                raise ValueError("k can only be (normalized) log_mu, log_msqrtR. ")
             pass
         else:
             raise ValueError("Unknown formula: %s" % ("".join(self.trend_formula)))
@@ -334,7 +334,7 @@ fast path.
 
 
         # covariance of new positions and training data positions
-        new_positions_covariance = covMatern5_2(self.X,new_positions[["mu_norm","log_msqrtR_norm"]].values,self.covariance_param,np.sqrt(5.0),self.covariance_sd2)  # The sqrt(5.0) is the scaling factor for Matern5_2
+        new_positions_covariance = covMatern5_2(self.X,new_positions[["log_mu_norm","log_msqrtR_norm"]].values,self.covariance_param,np.sqrt(5.0),self.covariance_sd2)  # The sqrt(5.0) is the scaling factor for Matern5_2
 
         # Solve self.T.T * new_positions_solution = new_positions_covariance
         new_positions_solution = self.solve_triangular_Ttranspose(new_positions_covariance,accel_trisolve_devs=accel_trisolve_devs)
@@ -402,7 +402,7 @@ fast path.
         # covariance of new positions and training data positions
         #new_positions_covariance = covMatern5_2(self.X,new_positions,self.covariance_param,np.sqrt(5.0),self.covariance_sd2)  # The sqrt(5.0) is the scaling factor for Matern5_2
 
-        new_positions_covariance_deriv_k = covMatern5_2_deriv_x2_k(self.X,new_positions[["mu_norm","log_msqrtR_norm"]].values,self.covariance_param,np.sqrt(5.0),self.covariance_sd2,k)  # The sqrt(5.0) is the scaling factor for Matern5_2
+        new_positions_covariance_deriv_k = covMatern5_2_deriv_x2_k(self.X,new_positions[["log_mu_norm","log_msqrtR_norm"]].values,self.covariance_param,np.sqrt(5.0),self.covariance_sd2,k)  # The sqrt(5.0) is the scaling factor for Matern5_2
         # row index of new_positions_covariance corresponds to rows of self.X; column index of new_positions_covariance correspond to rows of new_positions
 
         # T' * new_positions_solution = new_positions_covariance  -> want derivative of new_positions_solution with respect to new_positions_covariance (really with respect to new_positions[:,k]
@@ -509,7 +509,7 @@ class denormalized_surrogate(surrogate_model):
 
     def evaluate(self,new_positions,meanonly=False,accel_trisolve_devs=None):
 
-        normalized_new_positions = pd.DataFrame({"mu_norm": new_positions["mu"]/self.params_nominal["mu"],
+        normalized_new_positions = pd.DataFrame({"log_mu_norm": new_positions["log_mu"]/self.params_nominal["log_mu"],
                                                  "log_msqrtR_norm": new_positions["log_msqrtR"]/self.params_nominal["log_msqrtR"] })
         
         resdict = super(denormalized_surrogate,self).evaluate(normalized_new_positions,meanonly=meanonly,accel_trisolve_devs=accel_trisolve_devs)
@@ -529,9 +529,9 @@ class denormalized_surrogate(surrogate_model):
 
     def evaluate_derivative(self,new_positions,k,accel_trisolve_devs=None):
 
-        k_norm = {"mu": "mu_norm", "log_msqrtR": "log_msqrtR_norm" }[k]
+        k_norm = {"log_mu": "mu_norm", "log_msqrtR": "log_msqrtR_norm" }[k]
 
-        normalized_new_positions = pd.DataFrame({"mu_norm": new_positions["mu"]/self.params_nominal["mu"],
+        normalized_new_positions = pd.DataFrame({"log_mu_norm": new_positions["log_mu"]/self.params_nominal["log_mu"],
                                                  "log_msqrtR_norm": new_positions["log_msqrtR"]/self.params_nominal["log_msqrtR"] })
         
         derivative_wrt_normalized = super(denormalized_surrogate,self).evaluate_derivative(normalized_new_positions,k_norm,accel_trisolve_devs=accel_trisolve_devs)
@@ -568,7 +568,7 @@ class denormalized_surrogate(surrogate_model):
         params_nominal_index = surrogate_json["attributes"]["names"]["value"].index('params_nominal')
         #params_nominal = np.array(surrogate_json["value"][params_nominal_index]["value"],dtype='d')
         params_nominal = {
-            "mu": surrogate_json["value"][params_nominal_index]["value"][0],
+            "log_mu": surrogate_json["value"][params_nominal_index]["value"][0],
             "log_msqrtR": surrogate_json["value"][params_nominal_index]["value"][1],
         }
         output_nominal_index = surrogate_json["attributes"]["names"]["value"].index('output_nominal')

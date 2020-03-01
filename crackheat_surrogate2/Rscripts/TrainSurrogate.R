@@ -80,18 +80,18 @@ py_sys=import('sys')
 #msqrtR = seq(500000,50e6,length=5) # m*sqrtR (asperities*sqrt(m)/m^2
 
 # ***!!! As we change the ranges, should also change min_vals and max_vals in pt_steps/eval_crackheat_surrogate to match!***
-mu = seq(0.02,2.0,length=num_mus)
+log_mu = seq(log(0.02),log(2.0),length=num_mus)
 log_msqrtR = seq(9.2,18.4,length=num_msqrtRs) # log(m*sqrtR) log(asperities*sqrt(m)/m^2
 
 # Covariance values indicating region of significance
 # for each sample.... for now just use our grid step
-mu_cov = (mu[2]-mu[1])*1.0
+log_mu_cov = (log_mu[2]-log_mu[1])*1.0
 log_msqrtR_cov = (log_msqrtR[2]-log_msqrtR[1])*1.0
 
 heating_response_stddev = 1e-6 # assumed variability in temperature output (W/m^2/Hz)
 
 # Nominal values of physical quantities, for normalization
-mu_nominal=0.1
+log_mu_nominal=log(0.1)
 log_msqrtR_nominal = log(4e6)
 
 heating_response_nominal = 1e-6
@@ -113,12 +113,12 @@ ThermalPower = crackheat_table["ThermalPower..W."]
 ExcFreq = crackheat_table["ExcFreq..Hz."]
 
 log_msqrtR_norm = log_msqrtR/log_msqrtR_nominal
-mu_norm = mu/mu_nominal
+log_mu_norm = log_mu/log_mu_nominal
 
 
-testgrid = expand.grid(mu = mu, log_msqrtR=log_msqrtR) # ALWAYS use mu as first column so Python side can vectorize over mu
+testgrid = expand.grid(log_mu = log_mu, log_msqrtR=log_msqrtR) # ALWAYS use mu as first column so Python side can vectorize over mu
 
-testgrid_norm = expand.grid(mu_norm=mu_norm, log_msqrtR_norm=log_msqrtR_norm) # ALWAYS use mu as first column so Python side can vectorize over mu
+testgrid_norm = expand.grid(log_mu_norm=log_mu_norm, log_msqrtR_norm=log_msqrtR_norm) # ALWAYS use mu as first column so Python side can vectorize over mu
 
 #py$testgrid = testgrid
 #py$tortuosity = tortuosity
@@ -148,7 +148,7 @@ for (rownum in 1:NROW(lookup_keys)) {
     # Data structure to store our model data
     modeldata = list()
 
-    modeldata$params_nominal = c(mu_nominal,log_msqrtR_nominal)
+    modeldata$params_nominal = c(log_mu_nominal,log_msqrtR_nominal)
     modeldata$output_nominal = heating_response_nominal
 
     modeldata$bendingstress = as.numeric(BendingStress[rownum,])
@@ -191,10 +191,10 @@ for (rownum in 1:NROW(lookup_keys)) {
     #coef_var = (100e-3)^2 
     #coef_cov = c(30e6,10e6,4e6,0.1)
     coef_var = (heating_response_stddev/heating_response_nominal)^2
-    coef_cov = c(mu_cov/mu_nominal,log_msqrtR_cov/log_msqrtR_nominal)
+    coef_cov = c(log_mu_cov/log_mu_nominal,log_msqrtR_cov/log_msqrtR_nominal)
     
     # General formula for the trend, but not including coefficients
-    formula= ~mu_norm + log_msqrtR_norm + I(mu_norm^2) + I(log_msqrtR_norm^2) +  I(mu_norm*log_msqrtR_norm) 
+    formula= ~log_mu_norm + log_msqrtR_norm + I(log_mu_norm^2) + I(log_msqrtR_norm^2) +  I(log_mu_norm*log_msqrtR_norm) 
 
     modeldata$model = km(formula=formula,design = data.frame(testgrid_norm), response = heating_response_norm, noise.var = noise.variance_norm, coef.var = coef_var, coef.cov=coef_cov)
 
@@ -206,9 +206,9 @@ for (rownum in 1:NROW(lookup_keys)) {
     # mu_test_vals = seq(from=.02,to=1.0,by=.01)
     # log_msqrtR_test_val = testgrid[67,2]
     # 
-    # p <- predict.km(modeldata$model, newdata = data.frame(mu_norm = mu_test_vals/mu_nominal, log_msqrtR_norm = log_msqrtR_test_val/log_msqrtR_nominal), type="UK")
+    # p <- predict.km(modeldata$model, newdata = data.frame(log_mu_norm = log_mu_test_vals/log_mu_nominal, log_msqrtR_norm = log_msqrtR_test_val/log_msqrtR_nominal), type="UK")
     # plot(testgrid[67:77,1],heating_response_norm[67:77])
-    # lines(mu_test_vals,p$mean)
+    # lines(log_mu_test_vals,p$mean)
 }
 
 write(serializeJSON(all_surrogates,digits=NA),file=output_filename)
@@ -217,20 +217,20 @@ write(serializeJSON(all_surrogates,digits=NA),file=output_filename)
 # Verify that R and Python reconstruction code give same result
 py_surrogates = crackheat_surrogate2$load_surrogate$load_denorm_surrogates_from_jsonfile(output_filename,nonneg=FALSE)
 
-test_mu = 0.3
+test_log_mu = log(0.3)
 test_log_msqrtR = log(5e6)
 
-test_mu_norm = test_mu/mu_nominal
+test_log_mu_norm = test_log_mu/log_mu_nominal
 test_log_msqrtR_norm = test_log_msqrtR/log_msqrtR_nominal
 
-#test_positions_py = t(matrix(c(test_mu,test_log_msqrtR))) # create single-row matrix
-test_positions_py = data.frame(mu = test_mu, log_msqrtR = test_log_msqrtR)
+#test_positions_py = t(matrix(c(test_log_mu,test_log_msqrtR))) # create single-row matrix
+test_positions_py = data.frame(log_mu = test_log_mu, log_msqrtR = test_log_msqrtR)
 
 for (rownum in 1:NROW(lookup_keys)) {
     py_output = py_surrogates[[lookup_keys[[rownum]]]]$evaluate(test_positions_py)
     py_mean = py_output$mean[1]
 
-    R_output = predict.km(all_surrogates[[lookup_keys[[rownum]]]][["model"]], newdata=data.frame(expand.grid(mu_norm = test_mu_norm, log_msqrtR_norm=test_log_msqrtR_norm)),type="UK")
+    R_output = predict.km(all_surrogates[[lookup_keys[[rownum]]]][["model"]], newdata=data.frame(expand.grid(log_mu_norm = test_log_mu_norm, log_msqrtR_norm=test_log_msqrtR_norm)),type="UK")
     R_mean = R_output$mean[1]*heating_response_nominal
 
     # Check that R and Python libraries give the same result

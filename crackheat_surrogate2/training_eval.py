@@ -114,7 +114,7 @@ training_eval_output = training_eval(testgrid,tortuosity,leftclosure,rightclosur
 def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,multiprocessing_pool = None,multiprocessing_lock = None):
     """ NOTE: tortuosity should be angular standard deviation in degrees!!!"""
     #print("bendingstress=%s" % (str(bendingstress)))
-    mu=np.array(testgrid["mu"],dtype='d')
+    log_mu=np.array(testgrid["log_mu"],dtype='d')
     log_msqrtR=np.array(testgrid["log_msqrtR"],dtype='d')
 
     if multiprocessing_lock is None:
@@ -183,8 +183,8 @@ def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,
     crack_initial_opening_right = crackopening_from_tensile_closure(x_right,x_bnd_right,closure_stress_right,dx_right,aright,sigma_yield,crack_model_normal)
 
 
-    totalpower = np.zeros(mu.shape[0],dtype='d')
-    totalpower_stddev = np.zeros(mu.shape[0],dtype='d')
+    totalpower = np.zeros(log_mu.shape[0],dtype='d')
+    totalpower_stddev = np.zeros(log_mu.shape[0],dtype='d')
     
     # Find unique values of bendingstress, dynamicstress, and msqrtRn
     #print("bendingstress=%s" % (str(bendingstress)))
@@ -217,7 +217,7 @@ def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,
         #assert((dynamicstress[testgridpos:(testgridpos+count)]==dynamicstress[testgridpos]).all())
         assert((log_msqrtR[testgridpos:(testgridpos+count)]==log_msqrtR[testgridpos]).all())
 
-        friction_coefficient=mu[testgridpos:(testgridpos+count)]
+        friction_coefficient=np.exp(log_mu[testgridpos:(testgridpos+count)])
 
         params = (fixedparams,friction_coefficient,log_msqrtR[testgridpos])
 

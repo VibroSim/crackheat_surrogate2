@@ -57,17 +57,17 @@ def plot_slices(dc_dest_href,
                 min_vals,
                 max_vals,
                 peakidx,
-                mu_val,log_msqrtR_val,
+                log_mu_val,log_msqrtR_val,
                 main_thread_todo_list,
                 main_thread_stuff_todo):
 
     output_plots = []
     
     for axis in range(2):
-        # parameters are mu, log_msqrtR
+        # parameters are log_mu, log_msqrtR
         
         # Use these constant values except for the given axis
-        testgrid_const_vals = np.array((mu_val,log_msqrtR_val),dtype='d')
+        testgrid_const_vals = np.array((log_mu_val,log_msqrtR_val),dtype='d')
             
         # Use these values for the given axis
         testgrid_var_vals = np.linspace(min_vals[axis],max_vals[axis],50)
@@ -77,11 +77,11 @@ def plot_slices(dc_dest_href,
             
         eval_crackheat_threadlock.acquire() # pandas is documented as thread-unsafe.... this is probably unnecessary...
         try:
-            testgrid_dataframe=pd.DataFrame(testgrid,columns=["mu","log_msqrtR"])
+            testgrid_dataframe=pd.DataFrame(testgrid,columns=["log_mu","log_msqrtR"])
             sur_out = surrogate.evaluate(testgrid_dataframe)
         
             
-            testgrid_dict = { "mu": testgrid[:,0],
+            testgrid_dict = { "log_mu": testgrid[:,0],
                               "log_msqrtR": testgrid[:,1] }
             pass
         finally:
@@ -118,7 +118,7 @@ def plot_slices(dc_dest_href,
                 pl.legend(('Surrogate','Direct','Surrogate bounds','Direct bounds','Observation'),loc='best')
                 title = ""
                 if axis != 0:
-                    title += " mu = %f" % (mu_val)
+                    title += " ln mu = %f" % (log_mu_val)
                     pass
                 if axis != 1:
                     title += " ln msqrtR = %f ln(sqrt(m)/(m*m))" % (log_msqrtR_val)
@@ -170,22 +170,22 @@ def delegate_to_main_thread(main_thread_todo_list,main_thread_stuff_todo,action)
 
 
 def snap_to_gridlines(surrogate,
-                      mu_val,
+                      log_mu_val,
                       log_msqrtR_val):
 
-    param_scaling = np.array((surrogate.params_nominal["mu"],
+    param_scaling = np.array((surrogate.params_nominal["log_mu"],
                               surrogate.params_nominal["log_msqrtR"]),dtype='d')
     trained_vals = surrogate.X*param_scaling[np.newaxis,:]
-    trained_mu = np.unique(trained_vals[:,0])
+    trained_log_mu = np.unique(trained_vals[:,0])
     trained_log_msqrtR = np.unique(trained_vals[:,1])
     
     nearest = lambda trained,val : trained[np.argmin(np.abs(trained-val))]
     
-    mu_val = nearest(trained_mu, mu_val)
+    log_mu_val = nearest(trained_log_mu, log_mu_val)
     log_msqrtR_val = nearest(trained_log_msqrtR,log_msqrtR_val)
     
     
-    return (mu_val,
+    return (log_mu_val,
             log_msqrtR_val)
 
 
@@ -244,13 +244,13 @@ def eval_crackheat_singlesurrogate(params):
     #sd_peaklocs = np.where(sd_peaks)
     
     sd_peakvals = sd_expanded[1:-1,1:-1][sd_peaks]
-    sd_peak_mu = biggrid_expanded[0][1:-1,1:-1][sd_peaks]
+    sd_peak_log_mu = biggrid_expanded[0][1:-1,1:-1][sd_peaks]
     sd_peak_log_msqrtR = biggrid_expanded[1][1:-1,1:-1][sd_peaks]
     
     sd_peaksort = np.argsort(sd_peakvals)
 
     mean_peakvals = mean_expanded[1:-1,1:-1][mean_peaks]
-    mean_peak_mu = biggrid_expanded[0][1:-1,1:-1][mean_peaks]
+    mean_peak_log_mu = biggrid_expanded[0][1:-1,1:-1][mean_peaks]
     mean_peak_log_msqrtR = biggrid_expanded[1][1:-1,1:-1][mean_peaks]
     
     mean_peaksort = np.argsort(mean_peakvals)
@@ -265,17 +265,17 @@ def eval_crackheat_singlesurrogate(params):
         rand_val = np.random.rand()
         if rand_val > (num_peaks_per_data_point/max_peaks_per_data_point):
             continue # skip this point
-        #mu_val = sd_peak_mu[sd_peaksort][-peakidx-1]
+        #log_mu_val = sd_peak_log_mu[sd_peaksort][-peakidx-1]
         #log_msqrtR_val = sd_peak_log_msqrtR[sd_peaksort][-peakidx-1]
 
-        mu_val = mean_peak_mu[mean_peaksort][-peakidx-1]
+        log_mu_val = mean_peak_log_mu[mean_peaksort][-peakidx-1]
         log_msqrtR_val = mean_peak_log_msqrtR[mean_peaksort][-peakidx-1]
         
         #raise ValueError("debug!")
         if only_on_gridlines_bool:
-            (mu_val,
+            (log_mu_val,
              log_msqrtR_val) = snap_to_gridlines(surrogates[surrogate_key],
-                                                 mu_val,
+                                                 log_mu_val,
                                                  log_msqrtR_val)
                 
             pass
@@ -301,7 +301,7 @@ def eval_crackheat_singlesurrogate(params):
                                         min_vals,
                                         max_vals,
                                         peakidx,
-                                        mu_val,log_msqrtR_val,
+                                        log_mu_val,log_msqrtR_val,
                                         main_thread_todo_list,
                                         main_thread_stuff_todo))
         pass
@@ -317,14 +317,14 @@ def eval_crackheat_singlesurrogate(params):
         idx_absmax = np.argmax(mean_expanded)
         idxs_absmax = np.unravel_index(idx_absmax,mean_expanded.shape)
         
-        mu_val = biggrid_expanded[0][idxs_absmax]
+        log_mu_val = biggrid_expanded[0][idxs_absmax]
         log_msqrtR_val = biggrid_expanded[1][idxs_absmax]
         
 
         if only_on_gridlines_bool:
-            (mu_val,
+            (log_mu_val,
              log_msqrtR_val) = snap_to_gridlines(surrogates[surrogate_key],
-                                                 mu_val,
+                                                 log_mu_val,
                                                  log_msqrtR_val)
             pass
             
@@ -349,7 +349,7 @@ def eval_crackheat_singlesurrogate(params):
                                         min_vals,
                                         max_vals,
                                         peakidx,
-                                        mu_val,log_msqrtR_val,
+                                        log_mu_val,log_msqrtR_val,
                                         main_thread_todo_list,
                                         main_thread_stuff_todo))
         
@@ -395,7 +395,7 @@ def run(_xmldoc,_element,
     # Load in surrogates
     surrogates = load_denorm_surrogates_from_jsonfile(dc_surrogate_href.getpath(),nonneg=True)
 
-    axisnames = ['mu','log msqrtR']
+    axisnames = ['log mu','log msqrtR']
     axisunits = ['unitless','ln(sqrt(m)/(m*m))']
     axisunitfactor = [ 1.0, 1.0 ]
     
@@ -411,12 +411,12 @@ def run(_xmldoc,_element,
 
     # rough equivalent of R expand.grid():
     biggrid_expanded = np.meshgrid(
-        np.linspace(min_vals[0],max_vals[0],7), # mu
+        np.linspace(min_vals[0],max_vals[0],7), # log_mu
         np.linspace(min_vals[1],max_vals[1],8)) # log_msqrtR
 
     biggrid = np.stack(biggrid_expanded,-1).reshape(-1,2)
     
-    biggrid_dataframe=pd.DataFrame(biggrid,columns=["mu","log_msqrtR"])
+    biggrid_dataframe=pd.DataFrame(biggrid,columns=["log_mu","log_msqrtR"])
 
     #raise ValueError("debug")
 
