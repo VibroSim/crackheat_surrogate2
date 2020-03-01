@@ -29,7 +29,7 @@ def run(_xmldoc,_element,
         dc_filtered_sigma_numericunits,# =numericunitsv(30.0*np.pi/180.0,"radians"), # filtered tortuosity sigma in radians
         dc_crackheat_table_href,
         numdraws_int = 10,
-        num_mus_int = 11,
+        num_mus_int = 16,
         num_msqrtRs_int = 12,
         crack_model_normal_type_str = "Tada_ModeI_CircularCrack_along_midline",
         crack_model_shear_type_str = "Fabrikant_ModeII_CircularCrack_along_midline"):
