@@ -406,8 +406,8 @@ def run(_xmldoc,_element,
 
     # !!!*** NOTE: the bounds of the seq's in TrainSurrogate.R
     # should match min_vals and max_vals!!!***
-    min_vals = np.array((0.02,9.2),dtype='d')
-    max_vals = np.array((2.0,18.4),dtype='d')
+    min_vals = np.array((np.log(0.02),9.2),dtype='d')
+    max_vals = np.array((np.log(2.0),18.4),dtype='d')
 
     # rough equivalent of R expand.grid():
     biggrid_expanded = np.meshgrid(
