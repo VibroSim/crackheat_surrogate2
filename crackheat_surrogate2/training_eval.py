@@ -57,7 +57,7 @@ def afm_calc(params):
                                                         None,
                                                         verbose,
                                                         doplots,
-                                                        max_total_stddev = max_stddev/sqrt(2.0))
+                                                        max_total_stddev = max_stddev/np.sqrt(2.0))
 
     (power_per_m2_right,
      power_per_m2_stddev_right,
@@ -83,7 +83,7 @@ def afm_calc(params):
                                                          None,
                                                          verbose,
                                                          doplots,
-                                                         max_total_stddev = max_stddev/sqrt(2.0))
+                                                         max_total_stddev = max_stddev/np.sqrt(2.0))
     
     #(totalpower[testgridpos:(testgridpos+count)],
     # totalpower_stddev[testgridpos:(testgridpos+count)]) = integrate_power(xrange,power_per_m2_left,power_per_m2_left_stddev) + integrate_power(xrange,power_per_m2_right,power_per_m2_right_stddev)
