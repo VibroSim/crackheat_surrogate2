@@ -167,7 +167,7 @@ for (rownum in 1:NROW(lookup_keys)) {
     heating_response_norm = heating_response/heating_response_nominal
 
     noise.stddev_norm = noise.stddev/heating_response_nominal
-    noise.variance_norm = noise.stddev_norm^2
+    noise.variance_norm = noise.stddev_norm^2/4.0  # Divide the variance-norm by 4 to accommodate this variance causing surrogate to be an underestimate in many cases
 
 
     # For more info on DiceKriging, see
