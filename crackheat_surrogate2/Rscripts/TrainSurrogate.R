@@ -160,14 +160,17 @@ for (rownum in 1:NROW(lookup_keys)) {
     
     #print(paste('rownum=',rownum))   
 
-    training_eval_output = crackheat_surrogate2$training_eval$training_eval(testgrid,modeldata$bendingstress,modeldata$dynamicnormalstressampl,modeldata$dynamicshearstressampl,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,py$multiprocessing_pool)
+    max_normalized_stddev = 0.5
+    max_unnormalized_stddev = max_normalized_stddev*heating_response_nominal
+
+    training_eval_output = crackheat_surrogate2$training_eval$training_eval(testgrid,modeldata$bendingstress,modeldata$dynamicnormalstressampl,modeldata$dynamicshearstressampl,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,max_stddev = max_unnormalized_stddev,multiprocessing_pool=py$multiprocessing_pool)
     heating_response = training_eval_output[[1]]
     noise.stddev = training_eval_output[[2]]
 
     heating_response_norm = heating_response/heating_response_nominal
 
     noise.stddev_norm = noise.stddev/heating_response_nominal
-    noise.variance_norm = noise.stddev_norm^2/4.0  # Divide the variance-norm by 4 to accommodate this variance causing surrogate to be an underestimate in many cases
+    noise.variance_norm = noise.stddev_norm^2
 
 
     # For more info on DiceKriging, see

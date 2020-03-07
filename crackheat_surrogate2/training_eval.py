@@ -19,12 +19,19 @@ def afm_calc(params):
      friction_coefficient_array,
      log_msqrtR_val) = params
     
-    (bendingstress,dynamicnormalstress,dynamicshearstress,x_bnd_left,x_left,dx_left,x_bnd_right,x_right,dx_right,numdraws,E,nu,sigma_yield,tau_yield,closure_stress_left,crack_initial_opening_left,closure_stress_right,crack_initial_opening_right,tortuosity,aleft,aright,crack_model_normal_type,crack_model_shear_type,verbose,doplots) = fixedparams
+    (bendingstress,dynamicnormalstress,dynamicshearstress,x_bnd_left,x_left,dx_left,x_bnd_right,x_right,dx_right,numdraws,E,nu,sigma_yield,tau_yield,closure_stress_left,crack_initial_opening_left,closure_stress_right,crack_initial_opening_right,tortuosity,aleft,aright,crack_model_normal_type,crack_model_shear_type,max_stddev,verbose,doplots) = fixedparams
 
 
     # Need to create the crack models here because functions can't be passed through multiprocessing.map()
     crack_model_normal=crack_model_normal_by_name(crack_model_normal_type,E,nu)
     crack_model_shear=crack_model_shear_by_name(crack_model_shear_type,E,nu)
+
+    # This assumes crack_type=="quarterpenny" ... based on integrate_power() calculation
+    slice_area_left = (x_left[1]-x_left[0]) * np.pi*abs(x_left)/2.0
+    variance_weighting_left = slice_area_left**2.0
+    slice_area_right = (x_right[1]-x_right[0]) * np.pi*abs(x_right)/2.0
+    variance_weighting_right = slice_area_right**2.0
+
     
     (power_per_m2_left,
      power_per_m2_stddev_left,
@@ -49,7 +56,8 @@ def afm_calc(params):
                                                         "quarterpenny",
                                                         None,
                                                         verbose,
-                                                        doplots)
+                                                        doplots,
+                                                        max_total_stddev = max_stddev/sqrt(2.0))
 
     (power_per_m2_right,
      power_per_m2_stddev_right,
@@ -74,7 +82,8 @@ def afm_calc(params):
                                                          "quarterpenny",
                                                          None,
                                                          verbose,
-                                                         doplots)
+                                                         doplots,
+                                                         max_total_stddev = max_stddev/sqrt(2.0))
     
     #(totalpower[testgridpos:(testgridpos+count)],
     # totalpower_stddev[testgridpos:(testgridpos+count)]) = integrate_power(xrange,power_per_m2_left,power_per_m2_left_stddev) + integrate_power(xrange,power_per_m2_right,power_per_m2_right_stddev)
@@ -111,7 +120,7 @@ training_eval_output = training_eval(testgrid,tortuosity,leftclosure,rightclosur
 
 """
 
-def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,multiprocessing_pool = None,multiprocessing_lock = None):
+def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,max_stddev = None,multiprocessing_pool = None,multiprocessing_lock = None):
     """ NOTE: tortuosity should be angular standard deviation in degrees!!!"""
     #print("bendingstress=%s" % (str(bendingstress)))
     log_mu=np.array(testgrid["log_mu"],dtype='d')
@@ -191,7 +200,7 @@ def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,
     #print("dynamicstress=%s" % (str(dynamicstress)))
     #print("msqrtR=%s" % (str(msqrtR)))
 
-    fixedparams = (bendingstress,dynamicnormalstress,dynamicshearstress,x_bnd_left,x_left,dx_left,x_bnd_right,x_right,dx_right,numdraws,E,nu,sigma_yield,tau_yield,closure_stress_left,crack_initial_opening_left,closure_stress_right,crack_initial_opening_right,tortuosity,aleft,aright,crack_model_normal_type,crack_model_shear_type,verbose,doplots) 
+    fixedparams = (bendingstress,dynamicnormalstress,dynamicshearstress,x_bnd_left,x_left,dx_left,x_bnd_right,x_right,dx_right,numdraws,E,nu,sigma_yield,tau_yield,closure_stress_left,crack_initial_opening_left,closure_stress_right,crack_initial_opening_right,tortuosity,aleft,aright,crack_model_normal_type,crack_model_shear_type,max_stddev,verbose,doplots) 
 
     (uniquevals,uniquecounts) = np.unique(np.array((log_msqrtR,),dtype='d'),axis=1,return_counts=True)
 

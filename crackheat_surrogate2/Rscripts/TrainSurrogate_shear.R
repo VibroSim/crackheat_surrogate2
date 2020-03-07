@@ -169,7 +169,7 @@ for (rownum in 1:NROW(lookup_keys)) {
     
     #print(paste('rownum=',rownum))   
 
-    training_eval_output = crackheat_surrogate2$training_eval_shear$training_eval_shear(testgrid,modeldata$bendingstress,modeldata$dynamicnormalstressampl,modeldata$dynamicshearstressampl,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,py$multiprocessing_pool)
+    training_eval_output = crackheat_surrogate2$training_eval_shear$training_eval_shear(testgrid,modeldata$bendingstress,modeldata$dynamicnormalstressampl,modeldata$dynamicshearstressampl,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,multiprocessing_pool = py$multiprocessing_pool)
     heating_response = training_eval_output[[1]]
     noise.stddev = training_eval_output[[2]]
 
