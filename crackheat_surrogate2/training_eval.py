@@ -32,6 +32,12 @@ def afm_calc(params):
     slice_area_right = (x_right[1]-x_right[0]) * np.pi*abs(x_right)/2.0
     variance_weighting_right = slice_area_right**2.0
 
+    if max_stddev is None:
+        max_stddev_eachside = None
+        pass
+    else:
+        max_stddev_eachside = max_stddev/np.sqrt(2.0)
+        pass
     
     (power_per_m2_left,
      power_per_m2_stddev_left,
@@ -57,7 +63,7 @@ def afm_calc(params):
                                                         None,
                                                         verbose,
                                                         doplots,
-                                                        max_total_stddev = max_stddev/np.sqrt(2.0))
+                                                        max_total_stddev = max_stddev_eachside)
 
     (power_per_m2_right,
      power_per_m2_stddev_right,
@@ -83,7 +89,7 @@ def afm_calc(params):
                                                          None,
                                                          verbose,
                                                          doplots,
-                                                         max_total_stddev = max_stddev/np.sqrt(2.0))
+                                                         max_total_stddev = max_stddev_eachside)
     
     #(totalpower[testgridpos:(testgridpos+count)],
     # totalpower_stddev[testgridpos:(testgridpos+count)]) = integrate_power(xrange,power_per_m2_left,power_per_m2_left_stddev) + integrate_power(xrange,power_per_m2_right,power_per_m2_right_stddev)
