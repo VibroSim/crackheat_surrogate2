@@ -61,7 +61,7 @@ def plot_slices(dc_dest_href,
         testgrid_const_vals = np.array((log_mu_val,log_msqrtR_val),dtype='d')
             
         # Use these values for the given axis
-        testgrid_var_vals = np.linspace(min_vals[axis],max_vals[axis],50)
+        testgrid_var_vals = np.linspace(min_vals[axis],max_vals[axis],15)
         
         testgrid = np.ones((testgrid_var_vals.shape[0],1),dtype='d')*testgrid_const_vals[np.newaxis,:]
         testgrid[:,axis] = testgrid_var_vals

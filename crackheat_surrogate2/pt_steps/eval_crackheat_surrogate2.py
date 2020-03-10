@@ -30,14 +30,20 @@ surrogate_eval_nsmap={
 
 
 eval_crackheat_pool = multiprocessing.Pool()
-eval_crackheat_threadpool = multiprocessing.dummy.Pool()
+#eval_crackheat_threadpool = multiprocessing.dummy.Pool()
 #eval_crackheat_pool=None
-#eval_crackheat_threadpool=None
+eval_crackheat_threadpool=None
 eval_crackheat_threadlock = threading.Lock()  # MUST be used when calling multiprocessing functions, matplotlib functions, and lxml functions from thread
 
 
 
 def delegate_to_main_thread(main_thread_todo_list,main_thread_stuff_todo,action):
+    if eval_crackheat_threadpool is None:
+        # No multithreading... just call it
+        action()
+        return
+
+
     if action is not None:
         #print("Delegating task: %d" % (id(action)))
         complete_condition = threading.Condition()
