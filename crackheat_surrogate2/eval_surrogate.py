@@ -129,16 +129,17 @@ def plot_slices(dc_dest_href,
                 output_plots.append(outputplot_href)
 
                 # soft closure diag plot
+                print("soft_closure_diags(shape=%s,a_side1=%f mm; a_side2=%f mm)=%s" % (str(soft_closure_diags.shape),dc_a_side1_numericunits.value('m')*1e3,dc_a_side2_numericunits.value('m')*1e3,str(soft_closure_diags)))
                 pl.figure()
-                pl.plot(np.arange(soft_closure_diags.shape[0]),soft_closure_diags[:,0],'-',
-                        np.arange(soft_closure_diags.shape[0]),soft_closure_diags[:,1],'-',
-                        np.arange(soft_closure_diags.shape[0]),soft_closure_diags[:,2],'-',
-                        np.arange(soft_closure_diags.shape[0]),soft_closure_diags[:,3],'-')
+                pl.plot(np.arange(soft_closure_diags.shape[0]),soft_closure_diags[:,0],'x',
+                        np.arange(soft_closure_diags.shape[0]),soft_closure_diags[:,1],'o',
+                        np.arange(soft_closure_diags.shape[0]),soft_closure_diags[:,2],'+',
+                        np.arange(soft_closure_diags.shape[0]),soft_closure_diags[:,3],'*')
                 pl.grid(True)
                 pl.xlabel('SC calculation index')
                 pl.ylabel('Residual')
                 pl.legend(('residual_sub_left','residual_add_left','residual_sub_right','residual_add_right'))
-                pl.title('title')
+                pl.title(title)
 
 
                 scdiag_outputplot_href = hrefv("%s_surrogateeval_%.1fMPa_%.1fMPa_%.1fMPa_%.2d_%.1d_scdiag.png" % (dc_specimen_str,surrogate.bendingstress/1e6,surrogate.dynamicnormalstressampl/1e6,surrogate.dynamicshearstressampl/1e6,peakidx,axis),contexthref=dc_dest_href)
