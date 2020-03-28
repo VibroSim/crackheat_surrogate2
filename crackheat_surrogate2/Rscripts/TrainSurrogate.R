@@ -166,6 +166,7 @@ for (rownum in 1:NROW(lookup_keys)) {
     training_eval_output = crackheat_surrogate2$training_eval$training_eval(testgrid,modeldata$bendingstress,modeldata$dynamicnormalstressampl,modeldata$dynamicshearstressampl,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,max_stddev = max_unnormalized_stddev,multiprocessing_pool=py$multiprocessing_pool)
     heating_response = training_eval_output[[1]]
     noise.stddev = training_eval_output[[2]]
+    soft_closure_diags = training_eval_output[[3]]
 
     heating_response_norm = heating_response/heating_response_nominal
 
