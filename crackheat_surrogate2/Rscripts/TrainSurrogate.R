@@ -88,7 +88,7 @@ log_msqrtR = seq(9.2,18.4,length=num_msqrtRs) # log(m*sqrtR) log(asperities*sqrt
 log_mu_cov = (log_mu[2]-log_mu[1])*1.0
 log_msqrtR_cov = (log_msqrtR[2]-log_msqrtR[1])*1.0
 
-heating_response_stddev = 1e-6 # assumed variability in temperature output (W/m^2/Hz)
+heating_response_stddev = 1e-7 # assumed variability in temperature output (W/m^2/Hz) (was 1e-6)
 
 # Nominal values of physical quantities, for normalization
 log_mu_nominal=abs(log(0.1)) # nominal values should be positive
