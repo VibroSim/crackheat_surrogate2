@@ -1,11 +1,22 @@
 # /usr/bin/env Rscript
 
-# TODO:
-#   * Surrogate evaluation
-#   * variance and covariance tuning,
-#   * modify surrogate to give heat as a function of radius
-#     so temperature comparisons can be made.
-#   * residual minimization to find msqrtR and mu for each material 
+# Debugging Process: 
+# train_crackheat_surrogate processtrak step 
+# prints out args= ... when run. 
+# To debug, start R manually in a terminal, and paste
+# that assigment. 
+#
+# Then you can run most of this script line-by-line
+# 
+# ... do NOT paste in the args = commandArgs line below. 
+# 
+# If you need to trace into training_eval() (Python code) 
+# than do NOT paste in the py_multiprocessing  import or 
+# the lines immediately below. 
+# Instead paste in py$multiprocessing_pool = NULL... 
+# This will disable parallel processing on the Python side
+# making pdb escapes, etc. work. 
+
 
 # requires DiceKriging package (run install.packages()
 library('DiceKriging')
@@ -85,10 +96,10 @@ log_msqrtR = seq(9.2,18.4,length=num_msqrtRs) # log(m*sqrtR) log(asperities*sqrt
 
 # Covariance values indicating region of significance
 # for each sample.... for now just use our grid step
-log_mu_cov = (log_mu[2]-log_mu[1])*1.0
-log_msqrtR_cov = (log_msqrtR[2]-log_msqrtR[1])*1.0
+log_mu_cov = (log_mu[2]-log_mu[1])*2.0
+log_msqrtR_cov = (log_msqrtR[2]-log_msqrtR[1])*2.0
 
-heating_response_stddev = 1e-7 # assumed variability in temperature output (W/m^2/Hz) (was 1e-6)
+heating_response_stddev = 2.5e-7 # assumed variability in temperature output (W/m^2/Hz) (was 1e-6)
 
 # Nominal values of physical quantities, for normalization
 log_mu_nominal=abs(log(0.1)) # nominal values should be positive
@@ -143,6 +154,8 @@ all_surrogates = list()
 
 all_surrogates$closure_lowest_avg_load_used = closure_lowest_avg_load_used
 
+# lookup_keys lists the various measurements by bending stress
+# and dynsmic normal stress amplitude
 for (rownum in 1:NROW(lookup_keys)) {
 
     # Data structure to store our model data
@@ -208,6 +221,7 @@ for (rownum in 1:NROW(lookup_keys)) {
     all_surrogates[[lookup_keys[[rownum]]]] = modeldata
     ## p <- predict.km(modeldata$model, newdata = data.frame(x = t), type = "UK")
     # mu_test_vals = seq(from=.02,to=1.0,by=.01)
+    # log_mu_test_vals = log(mu_test_vals)
     # log_msqrtR_test_val = testgrid[67,2]
     # 
     # p <- predict.km(modeldata$model, newdata = data.frame(log_mu_norm = log_mu_test_vals/log_mu_nominal, log_msqrtR_norm = log_msqrtR_test_val/log_msqrtR_nominal), type="UK")
