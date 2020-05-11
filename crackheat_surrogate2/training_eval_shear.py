@@ -1,3 +1,5 @@
+# !!!!***** WARNING: OBSOLETE; Not upgraded with many fixes from training_eval.py ***!!!
+
 import sys
 import os
 import numpy as np

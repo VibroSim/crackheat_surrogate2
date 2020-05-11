@@ -32,7 +32,8 @@ def run(_xmldoc,_element,
         num_mus_int = 16,
         num_msqrtRs_int = 12,
         crack_model_normal_type_str = "Tada_ModeI_CircularCrack_along_midline",
-        crack_model_shear_type_str = "Fabrikant_ModeII_CircularCrack_along_midline"):
+        crack_model_shear_type_str = "Fabrikant_ModeII_CircularCrack_along_midline",
+        dc_symmetric_cod_bool=True):
 
 
     # load in crackheat table so that we can precalculate separate surrogates for each tuple of (normal stress, shear stress, bending stress) values
@@ -66,6 +67,7 @@ def run(_xmldoc,_element,
                               str(tau_yield),
                               crack_model_normal_type_str,
                               crack_model_shear_type_str,
+                              str(dc_symmetric_cod_bool),
                               str(E),
                               str(nu),
                               str(numdraws_int),

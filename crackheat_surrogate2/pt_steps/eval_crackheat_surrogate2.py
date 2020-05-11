@@ -87,7 +87,8 @@ def run(_xmldoc,_element,
         numdraws_int = 10,
         only_on_gridlines_bool = False,
         crack_model_normal_type_str = "Tada_ModeI_CircularCrack_along_midline",
-        crack_model_shear_type_str = "Fabrikant_ModeII_CircularCrack_along_midline"):
+        crack_model_shear_type_str = "Fabrikant_ModeII_CircularCrack_along_midline",
+        dc_symmetric_cod_bool=True):
 
         
     
@@ -151,6 +152,7 @@ def run(_xmldoc,_element,
                  sigma_yield,
                  tau_yield,
                  E,nu,
+                 dc_symmetric_cod_bool,
                  tortuosity,
                  axisnames,
                  axisunits,

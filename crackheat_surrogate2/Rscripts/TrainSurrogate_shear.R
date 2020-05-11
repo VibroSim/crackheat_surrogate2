@@ -1,4 +1,6 @@
 # /usr/bin/env Rscript
+# !!!*** WARNING: OBSOLETE: MANY UPDATES FROM TrainSurrogate.R NOT INCLUDED
+
 
 # TODO:
 #   * Surrogate evaluation

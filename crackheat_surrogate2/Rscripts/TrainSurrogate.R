@@ -64,12 +64,12 @@ crack_model_shear_type = args[11]
 
 E=as.numeric(args[12])
 nu=as.numeric(args[13])
+Symmetric_COD=as.logical(args[14])
+numdraws = strtoi(args[15],base = 10)
 
-numdraws = strtoi(args[14],base = 10)
-
-num_mus = strtoi(args[15],base = 10)
-num_msqrtRs = strtoi(args[16],base = 10)
-output_filename = args[17]
+num_mus = strtoi(args[16],base = 10)
+num_msqrtRs = strtoi(args[17],base = 10)
+output_filename = args[18]
 
 		
 # Requires reticulate package for letting R call python
@@ -77,8 +77,8 @@ output_filename = args[17]
 library('reticulate') 
 
 # eighteenth (optional) command line parameter, python binary to use
-if (length(args) >= 18) {
-  python_path = args[18]
+if (length(args) >= 19) {
+  python_path = args[19]
   use_python(python_path)
 }
 
@@ -176,7 +176,7 @@ for (rownum in 1:NROW(lookup_keys)) {
     max_normalized_stddev = 0.5
     max_unnormalized_stddev = max_normalized_stddev*heating_response_nominal
 
-    training_eval_output = crackheat_surrogate2$training_eval$training_eval(testgrid,modeldata$bendingstress,modeldata$dynamicnormalstressampl,modeldata$dynamicshearstressampl,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,max_stddev = max_unnormalized_stddev,multiprocessing_pool=py$multiprocessing_pool)
+    training_eval_output = crackheat_surrogate2$training_eval$training_eval(testgrid,modeldata$bendingstress,modeldata$dynamicnormalstressampl,modeldata$dynamicshearstressampl,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,max_stddev = max_unnormalized_stddev,multiprocessing_pool=py$multiprocessing_pool,Symmetric_COD=Symmetric_COD)
     heating_response = training_eval_output[[1]]
     noise.stddev = training_eval_output[[2]]
     soft_closure_diags = training_eval_output[[3]]

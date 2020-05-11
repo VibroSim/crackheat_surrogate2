@@ -36,6 +36,7 @@ def plot_slices(dc_dest_href,
                 sigma_yield,
                 tau_yield,
                 E,nu,
+                Symmetric_COD,
                 tortuosity,
                 surrogate_eval_doc,
                 surrogate,
@@ -93,7 +94,8 @@ def plot_slices(dc_dest_href,
                           E,nu,
                           numdraws_int,
                           multiprocessing_pool=eval_crackheat_pool,
-                          multiprocessing_lock=eval_crackheat_threadlock)
+                          multiprocessing_lock=eval_crackheat_threadlock,
+                          Symmetric_COD=Symmetric_COD)
         
         def gen_plot():
             eval_crackheat_threadlock.acquire() # matplotlib is thread-unsafe.... this was definitely necessary... but maybe no longer now that execution is delegated back to main thread... surrogate_eval_doc is also thread-unsafe...
@@ -205,6 +207,7 @@ def eval_crackheat_singlesurrogate(params):
      sigma_yield,
      tau_yield,
      E,nu,
+     Symmetric_COD,
      tortuosity,
      axisnames,
      axisunits,
@@ -292,6 +295,7 @@ def eval_crackheat_singlesurrogate(params):
                                             sigma_yield,
                                             tau_yield,
                                             E,nu,
+                                            Symmetric_COD,
                                             tortuosity,
                                             surrogate_eval_doc,
                                             surrogates[surrogate_key],
@@ -343,6 +347,7 @@ def eval_crackheat_singlesurrogate(params):
                                             sigma_yield,
                                             tau_yield,
                                             E,nu,
+                                            Symmetric_COD,
                                             tortuosity,
                                             surrogate_eval_doc,
                                             surrogates[surrogate_key],

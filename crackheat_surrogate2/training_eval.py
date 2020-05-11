@@ -20,12 +20,12 @@ def afm_calc(params):
          friction_coefficient_array,
          log_msqrtR_val) = params
     
-        (bendingstress,dynamicnormalstress,dynamicshearstress,x_bnd_left,x_left,dx_left,x_bnd_right,x_right,dx_right,numdraws,E,nu,sigma_yield,tau_yield,closure_stress_left,crack_initial_opening_left,closure_stress_right,crack_initial_opening_right,tortuosity,aleft,aright,crack_model_normal_type,crack_model_shear_type,max_stddev,verbose,doplots) = fixedparams
+        (bendingstress,dynamicnormalstress,dynamicshearstress,x_bnd_left,x_left,dx_left,x_bnd_right,x_right,dx_right,numdraws,E,nu,Symmetric_COD,sigma_yield,tau_yield,closure_stress_left,crack_initial_opening_left,closure_stress_right,crack_initial_opening_right,tortuosity,aleft,aright,crack_model_normal_type,crack_model_shear_type,max_stddev,verbose,doplots) = fixedparams
 
         
         # Need to create the crack models here because functions can't be passed through multiprocessing.map()
-        crack_model_normal=crack_model_normal_by_name(crack_model_normal_type,E,nu)
-        crack_model_shear=crack_model_shear_by_name(crack_model_shear_type,E,nu)
+        crack_model_normal=crack_model_normal_by_name(crack_model_normal_type,E,nu,Symmetric_COD=Symmetric_COD)
+        crack_model_shear=crack_model_shear_by_name(crack_model_shear_type,E,nu,Symmetric_CSD=Symmetric_COD)
 
         # This assumes crack_type=="quarterpenny" ... based on integrate_power() calculation
         slice_area_left = (x_left[1]-x_left[0]) * np.pi*abs(x_left)/2.0
@@ -141,7 +141,7 @@ training_eval_output = training_eval(testgrid,tortuosity,leftclosure,rightclosur
 
 """
 
-def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,max_stddev = None,multiprocessing_pool = None,multiprocessing_lock = None):
+def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,tortuosity,leftclosure,rightclosure,aleft,aright,sigma_yield,tau_yield,crack_model_normal_type,crack_model_shear_type,E,nu,numdraws,max_stddev = None,multiprocessing_pool = None,multiprocessing_lock = None,Symmetric_COD = True):
     """ NOTE: tortuosity should be angular standard deviation in degrees!!!"""
     #print("bendingstress=%s" % (str(bendingstress)))
     log_mu=np.array(testgrid["log_mu"],dtype='d')
@@ -221,7 +221,7 @@ def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,
     #print("dynamicstress=%s" % (str(dynamicstress)))
     #print("msqrtR=%s" % (str(msqrtR)))
 
-    fixedparams = (bendingstress,dynamicnormalstress,dynamicshearstress,x_bnd_left,x_left,dx_left,x_bnd_right,x_right,dx_right,numdraws,E,nu,sigma_yield,tau_yield,closure_stress_left,crack_initial_opening_left,closure_stress_right,crack_initial_opening_right,tortuosity,aleft,aright,crack_model_normal_type,crack_model_shear_type,max_stddev,verbose,doplots) 
+    fixedparams = (bendingstress,dynamicnormalstress,dynamicshearstress,x_bnd_left,x_left,dx_left,x_bnd_right,x_right,dx_right,numdraws,E,nu,Symmetric_COD,sigma_yield,tau_yield,closure_stress_left,crack_initial_opening_left,closure_stress_right,crack_initial_opening_right,tortuosity,aleft,aright,crack_model_normal_type,crack_model_shear_type,max_stddev,verbose,doplots) 
 
     (uniquevals,uniquecounts) = np.unique(np.array((log_msqrtR,),dtype='d'),axis=1,return_counts=True)
 
