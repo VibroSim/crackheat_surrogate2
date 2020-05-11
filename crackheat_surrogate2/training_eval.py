@@ -204,7 +204,7 @@ def training_eval(testgrid,bendingstress,dynamicnormalstress,dynamicshearstress,
         pass
         
 
-    crack_model_normal=crack_model_normal_by_name(crack_model_normal_type,E,nu)
+    crack_model_normal=crack_model_normal_by_name(crack_model_normal_type,E,nu,Symmetric_COD=Symmetric_COD)
     #crack_model_shear=crack_model_shear_by_name(crack_model_shear_type,E,nu)
 
     # Evaluate initial crack opening gaps from extrapolated tensile closure field
