@@ -61,10 +61,10 @@ tau_yield = as.numeric(args[9])
 
 crack_model_normal_type = args[10]
 crack_model_shear_type = args[11]
+Symmetric_COD=as.logical(args[12])
 
-E=as.numeric(args[12])
-nu=as.numeric(args[13])
-Symmetric_COD=as.logical(args[14])
+E=as.numeric(args[13])
+nu=as.numeric(args[14])
 numdraws = strtoi(args[15],base = 10)
 
 num_mus = strtoi(args[16],base = 10)
